@@ -9,7 +9,7 @@ class TransformerEncoderLayer(torch.nn.TransformerEncoderLayer):
     def forward(self, src, src_mask=None, src_key_padding_mask=None):
         """
         Pass the input through the encoder layer.
-        To understand forward in Transformer Encoder layer in Figure 1a, https://arxiv.org/pdf/2002.04745v1.pdf
+        To understand forward in Transformer Encoder layer, check: Figure 1a https://arxiv.org/pdf/2002.04745v1.pdf
 
         Args:
             src: the sequence to the encoder layer (required).
@@ -24,7 +24,7 @@ class TransformerEncoderLayer(torch.nn.TransformerEncoderLayer):
         
         # Transformer's [self-attention + add & norm]
         x = self.norm1(x + self._sa_block(x, src_mask, src_key_padding_mask))
-        # Trasnformer's [feedforward + add & norm]  
+        # Transformer's [feedforward + add & norm]  
         x = self.norm2(x + self._ff_block(x))
         
         return x
@@ -33,7 +33,7 @@ class TransformerEncoderLayer(torch.nn.TransformerEncoderLayer):
                   attn_mask: Optional[Tensor], 
                   key_padding_mask: Optional[Tensor]) -> Tensor:
         """
-        Multi-Head Attention layer that also returns last layer for model investigation
+        Multi-Head Attention layer that also returns last layer for model investigation.
 
         Args:
             x: input sequence (required).
@@ -55,8 +55,8 @@ class ScaledTransformerEncoderLayer(TransformerEncoderLayer):
                   attn_mask: Optional[Tensor], 
                   key_padding_mask: Optional[Tensor]) -> Tensor:
         """
-        Multi-Head Attention layer that also returns last layer for model investigation
-        Logits of each attention layer are scaled by log(n)
+        Multi-Head Attention layer that also returns last layer for model investigation.
+        Logits of each attention layer are scaled by log(n).
 
         Args:
             x: input sequence (required).
