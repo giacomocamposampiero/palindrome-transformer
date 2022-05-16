@@ -9,7 +9,7 @@ parser.add_argument('--train_size', dest='train_size', type=int, default=1000, h
 parser.add_argument('--test_size', dest='test_size', type=int, default=100, help='The number of test examples.')
 parser.add_argument('--train_len', dest='train_length', type=int, default=100, help='The length of each training example. If variable_length is set, the max length of each training example.')
 parser.add_argument('--test_len', dest='test_length', type=int, default=100, help='The length of each test example. If variable_length is set, the max length of each test example.')
-parser.add_argument('--variable_length', dest='variable_length', type=bool, default=True, help='If set, the length of each sequence will be uniformly random between 2 and the length specified in train_len or test_len.')
+parser.add_argument('--variable_length', dest='variable_length', type=bool, default=False, help='If set, the length of each sequence will be uniformly random between 2 and the length specified in train_len or test_len.')
 args = parser.parse_args()
 
 cols = ['sequence', 'label']
