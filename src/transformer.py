@@ -1,12 +1,40 @@
+from abc import abstractmethod
 import torch
 from .positional import PositionEncodingFirst, PositionEncodingParity
 from .encoder import ScaledTransformerEncoderLayer, TransformerEncoderLayer
 
 class Transformer(torch.nn.Module):
     """
-    Custom Transformer model, based on Vaswani et al. 2017 (https://arxiv.org/pdf/1706.03762.pdf)
+    Transformer class with abstract encoder.
     """
 
+    def __init__(self, alphabet_size, d_model):
+        """
+        Initialize Transformer module.
+
+        Args:
+            alphabet_size: |Σ|
+            d_model: the number of expected features in the encoder/decoder inputs.
+        """
+        
+        super().__init__()
+        
+        # word embedding layer
+        self.word_embedding = torch.nn.Embedding(num_embeddings=alphabet_size, embedding_dim=d_model)
+
+        # encoder gets set by the specific subclass
+        @property
+        @abstractmethod
+        def encoder(self):
+            pass
+
+        # final linear layer for the output 
+        self.output_layer = torch.nn.Linear(d_model, 1)
+
+class StandardTransformer(Transformer):
+    """
+    Custom Transfomer model with traditional encoder layers, based on based on Vaswani et al. 2017 (https://arxiv.org/pdf/1706.03762.pdf)
+    """
     def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn, scaled=False, eps=1e-5):
         """
         Initialize Transformer module.
@@ -21,11 +49,8 @@ class Transformer(torch.nn.Module):
             eps: the eps value in layer normalization components.
         """
         
-        super().__init__()
-        
-        # word embedding layer
-        self.word_embedding = torch.nn.Embedding(num_embeddings=alphabet_size, embedding_dim=d_model)
-        
+        super().__init__(alphabet_size, d_model)
+
         # use Scaled or Regular Transformer encoder layer
         # nb we're not using dropout
         if scaled:
@@ -36,11 +61,7 @@ class Transformer(torch.nn.Module):
         encoder_layer.norm1.eps = encoder_layer.norm2.eps = eps
         self.encoder = torch.nn.TransformerEncoder(encoder_layer, num_layers=layers)
 
-        # final linear layer for the output 
-        self.output_layer = torch.nn.Linear(d_model, 1)
-
-    
-class FirstTransformer(Transformer):
+class FirstTransformer(StandardTransformer):
     """
     Transformer Encoder (without decoding step) to learn First language.
     """
@@ -56,11 +77,10 @@ class FirstTransformer(Transformer):
         x = self.word_embedding(w) + self.pos_encoding(len(w))
         # encoder transformation
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
-        y = y[0]
-        z = self.output_layer(y)
+        z = self.output_layer(y[0])
         return z
 
-class ParityTransformer(Transformer):
+class ParityTransformer(StandardTransformer):
     """
     Transformer Encoder (without decoding step) to learn parity language.
     """
@@ -79,3 +99,14 @@ class ParityTransformer(Transformer):
         y = y[-1]
         z = self.output_layer(y)
         return z
+
+class FirstExactTransformer(Transformer):
+    def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn):
+        
+        super.__init__(alphabet_size, d_model)
+        
+        raise NotImplementedError
+
+    def forward(self, w):
+
+        raise NotImplementedError
