@@ -4,7 +4,7 @@ import csv
 import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--data_type', dest='data_type', type=str, default='first', help='Type of data to generate, either \'first\', \'parity\', or \'palindrome\'.')
+parser.add_argument('--data_type', dest='data_type', type=str, default='first', help='Type of data to generate, either \'first\', \'parity\', \'one\', or \'palindrome\'.')
 parser.add_argument('--train_size', dest='train_size', type=int, default=1000, help='The number of training examples.')
 parser.add_argument('--test_size', dest='test_size', type=int, default=100, help='The number of test examples.')
 parser.add_argument('--train_len', dest='train_length', type=int, default=100, help='The length of each training example. If variable_length is set, the max length of each training example.')
@@ -25,6 +25,15 @@ def get_row(max_len):
     elif args.data_type == 'parity':
         sequence = [random.randrange(2) for _ in range(seq_len)]
         label = sum(sequence) % 2 == 0
+    elif args.data_type == 'one':
+        sequence = [0 for _ in range(seq_len)]
+        index = random.randrange(len(sequence))
+        sequence[index] = (sequence[index] + 1) % 2
+        label = True
+        if(random.randrange(2) == 1):
+            index = random.randrange(len(sequence))
+            sequence[index] = (sequence[index] + 1) % 2
+            label = False
     elif args.data_type == 'palindrome':
         prefix = [random.randrange(2) for _ in range(seq_len // 2)]
         sequence = prefix + [i for i in reversed(prefix)]
