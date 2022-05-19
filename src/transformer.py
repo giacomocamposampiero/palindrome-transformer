@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from xml.dom import NoModificationAllowedErr
 import torch
 from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact
 from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder
@@ -145,7 +146,7 @@ class FirstExactTransformer(Transformer):
     Transformer Encoder (without decoding step) to learn First language exactly.
     """
 
-    def __init__(self, alphabet_size, d_model):
+    def __init__(self, alphabet_size, d_model, normalize=False):
         """
         Initialize Transformer module.
 
@@ -155,7 +156,7 @@ class FirstExactTransformer(Transformer):
         """
         super().__init__(alphabet_size, d_model)
         self.pos_encoding = PositionEncodingFirstExact()
-        self.encoder = FirstExactEncoder()
+        self.encoder = FirstExactEncoder(normalize=normalize)
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,1]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
