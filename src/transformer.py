@@ -146,17 +146,19 @@ class FirstExactTransformer(Transformer):
     Transformer Encoder (without decoding step) to learn First language exactly.
     """
 
-    def __init__(self, alphabet_size, d_model, normalize=False):
+    def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5):
         """
         Initialize Transformer module.
 
         Args:
             alphabet_size: |Σ|
             d_model: the number of expected features in the encoder/decoder inputs.
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
         """
         super().__init__(alphabet_size, d_model)
         self.pos_encoding = PositionEncodingFirstExact()
-        self.encoder = FirstExactEncoder(normalize=normalize)
+        self.encoder = FirstExactEncoder(normalize=normalize, eps=eps)
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,1]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))

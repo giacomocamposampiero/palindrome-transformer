@@ -73,27 +73,31 @@ class ScaledTransformerEncoderLayer(StandardTransformerEncoderLayer):
         
 class FirstExactEncoder(torch.nn.TransformerEncoder):
     
-    def __init__(self, normalize=False):
+    def __init__(self, normalize, eps):
         """
         Custom encoder as described in https://arxiv.org/pdf/2202.12172.pdf.
 
         Args:
-            normalize: if set, norm in forward method of layers.
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
         """
         torch.nn.Module.__init__(self)
 
         self.layers = torch.nn.ModuleList([
-            FirstExactTransformerFirstLayer(normalize),
-            FirstExactTransformerSecondLayer(normalize),
+            FirstExactTransformerFirstLayer(normalize, eps),
+            FirstExactTransformerSecondLayer(normalize, eps),
         ])
         self.num_layers = len(self.layers)
         self.norm = None
     
 class FirstExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
 
-    def __init__(self, normalize=False):
+    def __init__(self, normalize, eps):
         """ 
         Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
+        Args:
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
         """
         EMBED_DIM = 6
         W_F1 = [[-1, 0, -1, 1, 0, 0]]
@@ -101,9 +105,10 @@ class FirstExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
         W_F2 = [[0], [0], [0], [0], [1], [0]]
         b_F2 = [0] * EMBED_DIM
 
-        self.normalize = normalize
-
         super().__init__(d_model=EMBED_DIM, nhead=1, dim_feedforward=1, dropout=0.)
+
+        self.normalize = normalize
+        self.norm1.eps = self.norm2.eps = eps
 
         # q, k, v all have the same embedding dimension, so we just have to set it once as in_proj
         self.self_attn.in_proj_weight = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM, EMBED_DIM))
@@ -146,9 +151,13 @@ class FirstExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
 
 class FirstExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
 
-    def __init__(self, normalize=False):
+    def __init__(self, normalize, eps):
         """ 
         Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
+
+        Args:
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
         """
         EMBED_DIM = 6
         W_Q = [[0, 0, 1.0, 0, 0, 0]] + [[0] * EMBED_DIM] * 5
@@ -156,9 +165,10 @@ class FirstExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
         W_V = [[0] * EMBED_DIM] * 5 + [[0, 0, 0, -0.5, 1, 0]]
         W_O = [[0] * EMBED_DIM] * 5 + [[0, 0, 0, 0, 0, 1]]
 
-        self.normalize = normalize
-
         super().__init__(d_model=EMBED_DIM, nhead=1, dim_feedforward=1, dropout=0.0)
+
+        self.normalize = normalize
+        self.norm1.eps = self.norm2.eps = eps
 
         self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(
             W_Q +
