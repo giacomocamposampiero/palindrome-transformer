@@ -73,27 +73,35 @@ class ScaledTransformerEncoderLayer(StandardTransformerEncoderLayer):
         
 class FirstExactEncoder(torch.nn.TransformerEncoder):
     
-    def __init__(self):
+    def __init__(self, normalize=False):
+        """
+        Custom encoder as described in https://arxiv.org/pdf/2202.12172.pdf.
+
+        Args:
+            normalize: if set, norm in forward method of layers.
+        """
         torch.nn.Module.__init__(self)
 
         self.layers = torch.nn.ModuleList([
-            FirstExactTransformerFirstLayer(),
-            FirstExactTransformerSecondLayer(),
+            FirstExactTransformerFirstLayer(normalize),
+            FirstExactTransformerSecondLayer(normalize),
         ])
         self.num_layers = len(self.layers)
         self.norm = None
     
 class FirstExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
 
-    def __init__(self):
+    def __init__(self, normalize=False):
         """ 
-            Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
+        Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
         """
         EMBED_DIM = 6
         W_F1 = [[-1, 0, -1, 1, 0, 0]]
         b_F1 = [0]
         W_F2 = [[0], [0], [0], [0], [1], [0]]
         b_F2 = [0] * EMBED_DIM
+
+        self.normalize = normalize
 
         super().__init__(d_model=EMBED_DIM, nhead=1, dim_feedforward=1, dropout=0.)
 
@@ -128,13 +136,17 @@ class FirstExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
         src2 = self.self_attn(src, src, src, attn_mask=src_mask,
                             key_padding_mask=src_key_padding_mask)[0]
         src = src + self.dropout1(src2)
+        if self.normalize:
+            src = self.norm1(src)
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
         src = src + self.dropout2(src2)
+        if self.normalize:
+            src = self.norm2(src)
         return src
 
 class FirstExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
 
-    def __init__(self):
+    def __init__(self, normalize=False):
         """ 
         Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
         """
@@ -143,6 +155,8 @@ class FirstExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
         W_K = [[0, 0, 0, 1, 0, 0]] + [[0] * EMBED_DIM] * 5
         W_V = [[0] * EMBED_DIM] * 5 + [[0, 0, 0, -0.5, 1, 0]]
         W_O = [[0] * EMBED_DIM] * 5 + [[0, 0, 0, 0, 0, 1]]
+
+        self.normalize = normalize
 
         super().__init__(d_model=EMBED_DIM, nhead=1, dim_feedforward=1, dropout=0.0)
 
