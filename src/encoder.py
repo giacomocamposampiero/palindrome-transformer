@@ -90,8 +90,8 @@ class FirstExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
             Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
         """
         EMBED_DIM = 6
-        W_F1 = [[0, 1, 0, 1, 0, 0]]
-        b_F1 = [-1]
+        W_F1 = [[-1, 0, -1, 1, 0, 0]]
+        b_F1 = [0]
         W_F2 = [[0], [0], [0], [0], [1], [0]]
         b_F2 = [0] * EMBED_DIM
 
