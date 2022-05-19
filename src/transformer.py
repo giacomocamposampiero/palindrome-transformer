@@ -1,7 +1,7 @@
 from abc import abstractmethod
 import torch
-from .positional import PositionEncodingFirst, PositionEncodingParity
-from .encoder import ScaledTransformerEncoderLayer, TransformerEncoderLayer
+from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact
+from .encoder import ScaledTransformerEncoderLayer, TransformerEncoderLayer, FirstExactEncoder
 
 class Transformer(torch.nn.Module):
     """
@@ -16,7 +16,7 @@ class Transformer(torch.nn.Module):
             alphabet_size: |Σ|
             d_model: the number of expected features in the encoder/decoder inputs.
         """
-        
+
         super().__init__()
         
         # word embedding layer
@@ -30,6 +30,14 @@ class Transformer(torch.nn.Module):
 
         # final linear layer for the output 
         self.output_layer = torch.nn.Linear(d_model, 1)
+
+        def forward(self, w):
+            # concatenate word embeddings and positional embeddings
+            x = self.word_embedding(w) + self.pos_encoding(len(w))
+            # encoder transformation
+            y = self.encoder(x.unsqueeze(1)).squeeze(1)
+            z = self.output_layer(y[0])
+            return z
 
 class StandardTransformer(Transformer):
     """
@@ -67,18 +75,8 @@ class FirstTransformer(StandardTransformer):
     """
 
     def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn, scaled=False, eps=1e-5):
-
         super().__init__(alphabet_size, layers, heads, d_model, d_ffnn, scaled, eps)
         self.pos_encoding = PositionEncodingFirst(d_model)
-    
-    def forward(self, w):
-        
-        # concatenate word embeddings and positional embeddings
-        x = self.word_embedding(w) + self.pos_encoding(len(w))
-        # encoder transformation
-        y = self.encoder(x.unsqueeze(1)).squeeze(1)
-        z = self.output_layer(y[0])
-        return z
 
 class ParityTransformer(StandardTransformer):
     """
@@ -86,12 +84,10 @@ class ParityTransformer(StandardTransformer):
     """
 
     def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn, scaled=False, eps=1e-5):
-
         super().__init__(alphabet_size, layers, heads, d_model, d_ffnn, scaled, eps)
         self.pos_encoding = PositionEncodingParity(d_model)
 
     def forward(self, w):
-
         # concatenate word embeddings and positional embeddings
         x = self.word_embedding(w) + self.pos_encoding(len(w))
         # encoder transformation
@@ -102,11 +98,6 @@ class ParityTransformer(StandardTransformer):
 
 class FirstExactTransformer(Transformer):
     def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn):
-        
         super.__init__(alphabet_size, d_model)
-        
-        raise NotImplementedError
-
-    def forward(self, w):
-
-        raise NotImplementedError
+        self.pos_encoding = PositionEncodingFirstExact()
+        self.encoder = FirstExactEncoder()

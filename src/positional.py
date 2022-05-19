@@ -76,6 +76,7 @@ class PositionEncodingFirst(torch.nn.Module):
         Args:
             size: max length of a sequence that can be encoded by the transformer (requird).
         """
+
         super().__init__()
         self.size = size
 
@@ -86,6 +87,7 @@ class PositionEncodingFirst(torch.nn.Module):
         Args:
             n: length of the sequence (required).
         """
+
         zero = torch.zeros(n)
         pos = torch.arange(0, n).to(torch.float)
         pe = torch.stack([pos == 1] + [zero]*(self.size-1), dim=1)
@@ -99,6 +101,7 @@ class PositionEncodingFirstExact(torch.nn.Module):
         Args:
             size: max length of a sequence that can be encoded by the transformer (requird).
         """
+
         super().__init__()
 
     def forward(self, n):
@@ -108,7 +111,8 @@ class PositionEncodingFirstExact(torch.nn.Module):
         Args:
             n: length of the sequence (required).
         """
+        
         zero = torch.zeros(n)
         pos = torch.arange(0, n).to(torch.float)
-        pe = torch.stack([zero]*3 + [pos == 1] + [zero]*2, dim=1)
+        pe = torch.stack([zero] * 3 + [pos == 1] + [zero] * 2, dim=1)
         return pe
