@@ -72,7 +72,7 @@ class ScaledTransformerEncoderLayer(TransformerEncoderLayer):
         return self.dropout1(x)
         
 class FirstExactEncoder(TransformerEncoderLayer):
-
+    
     def __init__(self):
         torch.nn.Module.__init__(self)
 
@@ -84,7 +84,11 @@ class FirstExactEncoder(TransformerEncoderLayer):
         self.norm = None
     
     class FirstLayer(TransformerEncoderLayer):
+
         def __init__(self):
+            """ 
+                Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
+            """
             EMBED_DIM = 6
             W_F1 = [[0, 1, 0, 1, 0, 0]]
             b_F1 = [-1]
@@ -110,6 +114,18 @@ class FirstExactEncoder(TransformerEncoderLayer):
             self.linear2.bias = torch.nn.Parameter(torch.tensor(b_F2, dtype=torch.float))
 
         def forward(self, src, src_mask=None, src_key_padding_mask=None):
+            """
+            Pass the input through the encoder layer.
+            To understand forward in Transformer Encoder layer, check: Figure 1a https://arxiv.org/pdf/2002.04745v1.pdf
+
+            Args:
+                src: the sequence to the encoder layer (required).
+                src_mask: the mask for the src sequence (optional).
+                src_key_padding_mask: the mask for the src keys per batch (optional).
+
+            Shape:
+                see the docs in Transformer class.
+            """
             src2 = self.self_attn(src, src, src, attn_mask=src_mask,
                                 key_padding_mask=src_key_padding_mask)[0]
             src += self.dropout1(src2)
@@ -120,6 +136,9 @@ class FirstExactEncoder(TransformerEncoderLayer):
     class SecondLayer(TransformerEncoderLayer):
         
         def __init__(self):
+            """ 
+            Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
+            """
             EMBED_DIM = 6
             W_Q = [[0, 0, 1.0, 0, 0, 0]] + [[0] * EMBED_DIM] * 5
             W_K = [[0, 0, 0, 1, 0, 0]] + [[0] * EMBED_DIM] * 5

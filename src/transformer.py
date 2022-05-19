@@ -31,13 +31,22 @@ class Transformer(torch.nn.Module):
         # final linear layer for the output 
         self.output_layer = torch.nn.Linear(d_model, 1)
 
-        def forward(self, w):
-            # concatenate word embeddings and positional embeddings
-            x = self.word_embedding(w) + self.pos_encoding(len(w))
-            # encoder transformation
-            y = self.encoder(x.unsqueeze(1)).squeeze(1)
-            z = self.output_layer(y[0])
-            return z
+    def forward(self, w, pos=0):
+        """
+        Perform forward pass.
+
+        Args:
+            w: word
+            pos: position of the output layer to return
+        Returns:
+            single output from the output layer at specified position.
+        """
+        # concatenate word embeddings and positional embeddings
+        x = self.word_embedding(w) + self.pos_encoding(len(w))
+        # encoder transformation
+        y = self.encoder(x.unsqueeze(1)).squeeze(1)
+        z = self.output_layer(y[pos])
+        return z
 
 class StandardTransformer(Transformer):
     """
@@ -56,7 +65,7 @@ class StandardTransformer(Transformer):
             scaled: boolean flag to specify whether use normal or scaled encoder layer.
             eps: the eps value in layer normalization components.
         """
-        
+
         super().__init__(alphabet_size, d_model)
 
         # use Scaled or Regular Transformer encoder layer
@@ -75,8 +84,25 @@ class FirstTransformer(StandardTransformer):
     """
 
     def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn, scaled=False, eps=1e-5):
+        """
+        Initialize Transformer module.
+
+        Args:
+            alphabet_size: |Σ|
+            layers: the number of sub-layers in the encoder.
+            heads: the number of heads in the multiheadattention models.
+            d_model: the number of expected features in the encoder/decoder inputs.
+            d_ffnn: the dimension of the feedforward network model.
+            scaled: boolean flag to specify whether use normal or scaled encoder layer.
+            eps: the eps value in layer normalization components.
+        """
+
         super().__init__(alphabet_size, layers, heads, d_model, d_ffnn, scaled, eps)
         self.pos_encoding = PositionEncodingFirst(d_model)
+    
+    def forward(self, w):
+        # First uses first symbol of the output layer
+        return super().forward(w, 0)
 
 class ParityTransformer(StandardTransformer):
     """
@@ -84,20 +110,43 @@ class ParityTransformer(StandardTransformer):
     """
 
     def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn, scaled=False, eps=1e-5):
+        """
+        Initialize Transformer module.
+
+        Args:
+            alphabet_size: |Σ|
+            layers: the number of sub-layers in the encoder.
+            heads: the number of heads in the multiheadattention models.
+            d_model: the number of expected features in the encoder/decoder inputs.
+            d_ffnn: the dimension of the feedforward network model.
+            scaled: boolean flag to specify whether use normal or scaled encoder layer.
+            eps: the eps value in layer normalization components.
+        """
+
         super().__init__(alphabet_size, layers, heads, d_model, d_ffnn, scaled, eps)
         self.pos_encoding = PositionEncodingParity(d_model)
-
+    
     def forward(self, w):
-        # concatenate word embeddings and positional embeddings
-        x = self.word_embedding(w) + self.pos_encoding(len(w))
-        # encoder transformation
-        y = self.encoder(x.unsqueeze(1)).squeeze(1)
-        y = y[-1]
-        z = self.output_layer(y)
-        return z
+        # Parity uses last symbol of the output layer
+        return super().forward(w, -1)
 
 class FirstExactTransformer(Transformer):
-    def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn):
+    """
+    Transformer Encoder (without decoding step) to learn First language exactly.
+    """
+
+    def __init__(self, alphabet_size, d_model):
+        """
+        Initialize Transformer module.
+
+        Args:
+            alphabet_size: |Σ|
+            d_model: the number of expected features in the encoder/decoder inputs.
+        """
         super.__init__(alphabet_size, d_model)
         self.pos_encoding = PositionEncodingFirstExact()
         self.encoder = FirstExactEncoder()
+
+    def forward(self, w):
+        # First uses first symbol of the output layer
+        return super().forward(w, 0)
