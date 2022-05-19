@@ -1,7 +1,7 @@
 from abc import abstractmethod
 import torch
 from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact
-from .encoder import ScaledTransformerEncoderLayer, TransformerEncoderLayer, FirstExactEncoder
+from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder
 
 class Transformer(torch.nn.Module):
     """
@@ -31,22 +31,6 @@ class Transformer(torch.nn.Module):
         # final linear layer for the output 
         self.output_layer = torch.nn.Linear(d_model, 1)
 
-    def forward(self, w, pos=0):
-        """
-        Perform forward pass.
-
-        Args:
-            w: word
-            pos: position of the output layer to return
-        Returns:
-            single output from the output layer at specified position.
-        """
-        # concatenate word embeddings and positional embeddings
-        x = self.word_embedding(w) + self.pos_encoding(len(w))
-        # encoder transformation
-        y = self.encoder(x.unsqueeze(1)).squeeze(1)
-        z = self.output_layer(y[pos])
-        return z
 
 class StandardTransformer(Transformer):
     """
@@ -73,7 +57,7 @@ class StandardTransformer(Transformer):
         if scaled:
             encoder_layer = ScaledTransformerEncoderLayer(d_model=d_model, nhead=heads, dim_feedforward=d_ffnn, dropout=0.)
         else:
-            encoder_layer = TransformerEncoderLayer(d_model=d_model, nhead=heads, dim_feedforward=d_ffnn, dropout=0.)
+            encoder_layer = StandardTransformerEncoderLayer(d_model=d_model, nhead=heads, dim_feedforward=d_ffnn, dropout=0.)
         
         encoder_layer.norm1.eps = encoder_layer.norm2.eps = eps
         self.encoder = torch.nn.TransformerEncoder(encoder_layer, num_layers=layers)
@@ -101,8 +85,21 @@ class FirstTransformer(StandardTransformer):
         self.pos_encoding = PositionEncodingFirst(d_model)
     
     def forward(self, w):
-        # First uses first symbol of the output layer
-        return super().forward(w, 0)
+        """
+        Perform forward pass.
+
+        Args:
+            w: word
+            pos: position of the output layer to return
+        Returns:
+            single output from the output layer at specified position.
+        """
+        # concatenate word embeddings and positional embeddings
+        x = self.word_embedding(w) + self.pos_encoding(len(w))
+        # encoder transformation
+        y = self.encoder(x.unsqueeze(1)).squeeze(1)
+        z = self.output_layer(y[0])
+        return z
 
 class ParityTransformer(StandardTransformer):
     """
@@ -127,8 +124,21 @@ class ParityTransformer(StandardTransformer):
         self.pos_encoding = PositionEncodingParity(d_model)
     
     def forward(self, w):
-        # Parity uses last symbol of the output layer
-        return super().forward(w, -1)
+        """
+        Perform forward pass.
+
+        Args:
+            w: word
+            pos: position of the output layer to return
+        Returns:
+            single output from the output layer at specified position.
+        """
+        # concatenate word embeddings and positional embeddings
+        x = self.word_embedding(w) + self.pos_encoding(len(w))
+        # encoder transformation
+        y = self.encoder(x.unsqueeze(1)).squeeze(1)
+        z = self.output_layer(y[-1])
+        return z
 
 class FirstExactTransformer(Transformer):
     """
@@ -143,10 +153,26 @@ class FirstExactTransformer(Transformer):
             alphabet_size: |Σ|
             d_model: the number of expected features in the encoder/decoder inputs.
         """
-        super.__init__(alphabet_size, d_model)
+        super().__init__(alphabet_size, d_model)
         self.pos_encoding = PositionEncodingFirstExact()
         self.encoder = FirstExactEncoder()
+        self.output_layer.weight = torch.nn.Parameter(torch.tensor(
+            [[0,0,0,0,0,1]], dtype=torch.float))
+        self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
 
     def forward(self, w):
-        # First uses first symbol of the output layer
-        return super().forward(w, 0)
+        """
+        Perform forward pass.
+
+        Args:
+            w: word
+            pos: position of the output layer to return
+        Returns:
+            single output from the output layer at specified position.
+        """
+        # concatenate word embeddings and positional embeddings
+        x = self.word_embedding(w) + self.pos_encoding(len(w))
+        # encoder transformation
+        y = self.encoder(x.unsqueeze(1)).squeeze(1)
+        z = self.output_layer(y[0])
+        return z
