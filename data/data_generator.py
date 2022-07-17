@@ -17,18 +17,55 @@ cols = ['sequence', 'label']
 train_rows = []
 test_rows = []
 
+# returns all indecs of element a in list
+def get_indecies(ls, a):
+    indecies = []
+    for x in range(len(ls)):
+        if ls[x] == a:
+            indecies.append(x)
+    return indecies
+
+# Length is how many matching brackets should appear (), would be 1
+# alphabet is array of tuple of matching pairs i.e. [ ( '(', ')' ), ('{', '}') ]
+def cfg_generate(length, alphabet= [ ( '(', ')' ), ('{', '}') ]):
+    if length == 0:
+        return []
+
+    if random.randint(0,1) == 1:
+        # case (S)
+        selected = random.randrange(len(alphabet))
+        return [*alphabet[selected][0], *cfg_generate(length-1, alphabet), *alphabet[selected][1] ]
+    else:
+        # case SS
+        left_length = random.randrange(length+1)
+        right_length = length - left_length
+        return [*cfg_generate(left_length, alphabet), *cfg_generate(right_length, alphabet)]
+
+# validates any sequence including {}, () and 0,1
 def valid_bracket_sequence(seq):
-    prefix_sum = 0
+    match = {}
+    match['{'] = '}'
+    match['('] = ')'
+    match['0'] = '1'
+
+    stack = []
     for x in seq:
-        if x == 0:
-            prefix_sum += 1
+        if x in match:
+            stack.append(x)
         else:
-            prefix_sum -= 1
-        if prefix_sum < 0:
-            return False
-    if prefix_sum != 0:
-        return False
-    return True
+            if len(stack) == 0:
+                return False
+            else:
+                last = stack.pop()
+                if match[last] != x:
+                    return False
+
+    if len(stack) == 0:
+        return True
+    return False
+
+
+
 
 def get_row(max_len):
     seq_len = random.randrange(2, max_len + 1) if args.variable_length else max_len
@@ -59,23 +96,57 @@ def get_row(max_len):
             label = False
     elif args.data_type == 'dyck1':
         half_len = seq_len // 2
-        a = 0
-        b = 0
-        sequence = []
-        for x in range(half_len * 2):
-            if random.randrange((2 * half_len - a - b) * (a - b + 1)-1) < (half_len - a) * (a - b + 2):
-                sequence.append(0)
-                a += 1
-            else:
-                sequence.append(1)
-                b += 1
+        sequence = cfg_generate(half_len, [('(', ')')])
         label = True
         # Validation of bracket sequence (can be removed)
         assert valid_bracket_sequence(sequence)
+
         if random.randrange(2) == 1:
-            index = random.randrange(len(sequence))
-            sequence[index] = (sequence[index] + 1) % 2
             label = False
+            # Flip randomly, both types i.e ( then ), until bracket sequence is no longer valid
+            while valid_bracket_sequence(sequence):
+                # flip (
+                indecies = get_indecies(sequence, '(')
+                index = indecies[random.randrange(len(indecies))]
+                sequence[index] = ')'
+
+                # flip )
+                indecies = get_indecies(sequence, ')')
+                index = indecies[random.randrange(len(indecies))]
+                sequence[index] = '('
+
+    elif args.data_type == 'dyck2':
+        half_len = seq_len // 2
+        sequence = cfg_generate(half_len)
+        label = True
+
+        assert valid_bracket_sequence(sequence)
+        if random.randrange(2) == 1:
+            label = False
+            while valid_bracket_sequence(sequence):
+                if '(' in sequence:
+                    # flip (
+                    indecies = get_indecies(sequence, '(')
+                    index = indecies[random.randrange(len(indecies))]
+                    sequence[index] = ')'
+
+                    # flip )
+                    indecies = get_indecies(sequence, ')')
+                    index = indecies[random.randrange(len(indecies))]
+                    sequence[index] = '('
+                if '{' in sequence:
+                     # flip {
+                    indecies = get_indecies(sequence, '{')
+                    index = indecies[random.randrange(len(indecies))]
+                    sequence[index] = '}'
+
+                    # flip )
+                    indecies = get_indecies(sequence, '}')
+                    index = indecies[random.randrange(len(indecies))]
+                    sequence[index] = '{'
+
+
+
     sequence = '$' + ''.join([str(i) for i in sequence])
     return [sequence, label]
 
