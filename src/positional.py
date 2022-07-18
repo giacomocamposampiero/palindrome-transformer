@@ -116,3 +116,17 @@ class PositionEncodingFirstExact(torch.nn.Module):
         pos = torch.arange(0, n).to(torch.float)
         pe = torch.stack([zero] * 3 + [pos == 1] + [zero] * 2, dim=1)
         return pe
+
+class PositionEncodingParityExact(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, n):
+        zero = torch.zeros(n)
+        pos = torch.arange(0, n).to(torch.float)
+        pe = torch.stack([zero]*3 +
+                         [pos / n,
+                          torch.cos(pos*math.pi)] +
+                         [zero]*5,
+                         dim=1)
+        return pe
