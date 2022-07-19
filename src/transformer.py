@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from xml.dom import NoModificationAllowedErr
 import torch
-from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact
-from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder
+from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact
+from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder, ParityExactEncoder
 
 class Transformer(torch.nn.Module):
     """
@@ -173,9 +173,34 @@ class FirstExactTransformer(Transformer):
         Returns:
             single output from the output layer at specified position.
         """
+
+
+        print(w.shape)
+        inter=self.pos_encoding(len(w))
+        print(inter.shape)
+        inter2=self.word_embedding(w)
+        print(inter2.shape)
         # concatenate word embeddings and positional embeddings
         x = self.word_embedding(w) + self.pos_encoding(len(w))
         # encoder transformation
+        y = self.encoder(x.unsqueeze(1)).squeeze(1)
+        z = self.output_layer(y[0])
+        return z
+
+class ParityExactTransformer(Transformer):
+    def __init__(self,alphabet_size,d_model):
+        super().__init__(alphabet_size,d_model)
+        # self.word_embedding = torch.eye(3, 10)
+        self.pos_encoding = PositionEncodingParityExact()
+        self.encoder = ParityExactEncoder()
+        # self.output_layer = torch.nn.Linear(10, 1)
+        self.output_layer.weight = torch.nn.Parameter(torch.tensor(
+            [[0,0,0,0,0,0,0,0,1,0]], dtype=torch.float))
+        self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
+
+    def forward(self, w):
+        
+        x = self.word_embedding(w) + self.pos_encoding(len(w))
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
         return z
