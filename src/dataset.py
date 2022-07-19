@@ -37,7 +37,7 @@ class Dataset:
                     - first
                     - parity
                     - one
-                    - plaindrome
+                    - palindrome
                     - dyck1
                     - dyck2
     
@@ -64,6 +64,7 @@ class Dataset:
         self.variable_length = variable_lenght
         self.index = 0
         self.train = train
+        self.epoch = 0
 
 
     def __iter__(self):
@@ -90,6 +91,7 @@ class Dataset:
         Reset the index for the iterator. Allows multiple epochs training.
         """
         self.index = 0
+        self.epoch +=1
 
 
     # TODO
@@ -104,15 +106,15 @@ class Dataset:
               value (string) and a label (bool)
         """
 
-        cols = ['sequence', 'label']
+        cols = ['epoch', 'sequence', 'label']
 
         os.makedirs("data/" + self.data_type, exist_ok=True)
         variable_str = 'var' if self.variable_length else ''
 
         if self.train:
-            logpath = "data/" + self.data_type + f"/run{self.uid:04d}_train_n{self.size}_l{self.length}{variable_str}.csv"
+            logpath = "data/" + self.data_type + f"/run{self.uid:04d}_train.csv"
         else:
-            logpath = "data/" + self.data_type + f"/run{self.uid:04d}_test_n{self.size}_l{self.length}{variable_str}.csv"
+            logpath = "data/" + self.data_type + f"/run{self.uid:04d}_test.csv"
 
         from pathlib import Path
         path = Path(logpath)
@@ -121,13 +123,13 @@ class Dataset:
             # this is not the first row
             with open(path, 'a') as file:
                 writer = csv.writer(file)
-                writer.writerow(row)
+                writer.writerow([self.epoch]+row)
         else:
             # this is the first row
             with open(path, 'w') as file:
                 writer = csv.writer(file)
                 writer.writerow(cols)
-                writer.writerow(row)
+                writer.writerow([self.epoch]+row)
 
 
     def __get_indices(self, ls, a):
