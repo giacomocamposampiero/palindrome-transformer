@@ -1,0 +1,4 @@
+runid,lan,train_length,test_length,size,varlen,epochs,exact,layers,heads,d_ffnn,scaled,eps,lr
+1,first,10,1000,100,False,10,False,2,1,64,False,1e-05,0.0003
+2,first,10,1000,100,False,10,False,2,1,64,False,1e-05,0.0003
+3,first,10,1000,100,False,10,False,2,1,64,False,1e-05,0.0003
