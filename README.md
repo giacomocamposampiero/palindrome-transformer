@@ -2,12 +2,12 @@
 
 ## Feature list
 - [x] Encoder
-- [ ] First Learned
-- [ ] First Exact 
-- [ ] Parity Learned
+- [x] First Learned
+- [x] First Exact 
+- [x] Parity Learned
 - [ ] Parity Exact
-- [ ] Theory ONE
-- [ ] Theory Palyndrome
+- [x] Theory ONE
+- [x] Theory Palyndrome
 - [ ] ONE Learned
 - [ ] ONE Exact
 - [ ] Palyndrome Learned
