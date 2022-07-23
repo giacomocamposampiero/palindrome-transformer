@@ -81,29 +81,7 @@ class Trainer:
         val_acc : list
                   validation accuracy for each epoch, shape (epochs,)
         """
-        train_l, val_l, train_acc, val_acc = self.__train_loop()
-        return train_l, val_l, train_acc, val_acc
         
-
-    def __train_loop(self):
-        """
-        Model training loop.
-
-        Returns
-        -------
-        train_l : list
-                  training loss for each epoch, shape (epochs,)
-
-        val_l : list
-                validation loss for each epoch, shape (epochs,)
-
-        train_acc : list
-                    training accuracy for each epoch, shape (epochs,)
-
-        val_acc : list
-                  validation accuracy for each epoch, shape (epochs,)
-        """
-
         train_l = []
         val_l = []
         train_acc = []
@@ -163,6 +141,7 @@ class Trainer:
                 print(f"[Epoch {epoch+1}] Train acc: {train_correct/self.trainset.size} Train loss: {train_loss}, Test acc: {test_correct/self.testset.size} Test loss: {test_loss}", flush=True)
 
         return train_l, val_l, train_acc, val_acc
+  
 
     def __encode(self, s: str) -> torch.Tensor:
         alphabet_index = {a:i for i,a in enumerate(self.vocab)}
