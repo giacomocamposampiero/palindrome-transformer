@@ -24,7 +24,7 @@ def main(args):
             transformer = FirstExactTransformer(len(vocab), d_model) if args.exact \
                     else FirstTransformer(len(vocab), args.layers, args.heads, d_model, args.d_ffnn, args.scaled, args.eps)
             
-        elif args.lan == 'first':
+        elif args.lan == 'parity':
             vocab = ["0", "1", "$"]
             transformer = ParityExactTransformer(len(vocab), d_model) if args.exact \
                     else ParityTransformer(len(vocab), args.layers, args.heads, d_model, args.d_ffnn, args.scaled, args.eps)
