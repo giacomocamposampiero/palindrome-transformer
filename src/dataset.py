@@ -143,7 +143,7 @@ class Dataset:
         return indecies
 
     
-    def __cfg_generate(self, length, alphabet= [ ( '(', ')' ), ('{', '}') ]):
+    def __generate_bracket_sequence(self, length, alphabet= [ ( '(', ')' ), ('{', '}') ]):
         """
         Length is how many matching brackets should appear (), would be 1
         alphabet is array of tuple of matching pairs i.e. [ ( '(', ')' ), ('{', '}') ]
