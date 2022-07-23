@@ -94,7 +94,6 @@ class Dataset:
         self.epoch +=1
 
 
-    # TODO
     def __log_row(self, row):
         """ 
         Log rows generated during training.
@@ -270,13 +269,3 @@ class Dataset:
 
         sequence = '$' + ''.join([str(i) for i in sequence])
         return [sequence, label]
-
-
-# # DEBUG DATASET CLASS
-# dataset =  Dataset(0, 20, 2,  42, True, 'first', False)
-# for row in dataset:
-#     print(row)
-# dataset.reset_index()
-# print("+"*50)
-# for row in dataset:
-#     print(row)

@@ -175,11 +175,11 @@ class FirstExactTransformer(Transformer):
         """
 
 
-        print(w.shape)
+        # print(w.shape)
         inter=self.pos_encoding(len(w))
-        print(inter.shape)
+        # print(inter.shape)
         inter2=self.word_embedding(w)
-        print(inter2.shape)
+        # print(inter2.shape)
         # concatenate word embeddings and positional embeddings
         x = self.word_embedding(w) + self.pos_encoding(len(w))
         # encoder transformation
