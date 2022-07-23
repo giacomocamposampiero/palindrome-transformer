@@ -83,7 +83,7 @@ class Validator:
 
         # print validation info
         if self.verbose:
-            print(f"[Validation length {self.valset.length}] Loss: {loss}, Accuracy: {correct/self.valset.size}", flush=True)
+            print(f"[Validation] Length {self.valset.length}. Loss: {loss}, Accuracy: {correct/self.valset.size}", flush=True)
 
         return loss, correct / self.valset.size
 
