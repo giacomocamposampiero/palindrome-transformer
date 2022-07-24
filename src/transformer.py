@@ -1,7 +1,6 @@
 from abc import abstractmethod
-from xml.dom import NoModificationAllowedErr
 import torch
-from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact
+from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact, PositionEncodingOne
 from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder, ParityExactEncoder
 
 class Transformer(torch.nn.Module):
@@ -141,6 +140,48 @@ class ParityTransformer(StandardTransformer):
         z = self.output_layer(y[-1])
         return z
 
+
+class OneTransformer(StandardTransformer):
+    """
+    Transformer Encoder (without decoding step) to learn One language.
+    """
+
+    def __init__(self, alphabet_size, layers, heads, d_model, d_ffnn, scaled=False, eps=1e-5):
+        """
+        Initialize Transformer module.
+
+        Args:
+            alphabet_size: |Σ|
+            layers: the number of sub-layers in the encoder.
+            heads: the number of heads in the multiheadattention models.
+            d_model: the number of expected features in the encoder/decoder inputs.
+            d_ffnn: the dimension of the feedforward network model.
+            scaled: boolean flag to specify whether use normal or scaled encoder layer.
+            eps: the eps value in layer normalization components.
+        """
+
+        super().__init__(alphabet_size, layers, heads, d_model, d_ffnn, scaled, eps)
+        self.pos_encoding = PositionEncodingOne(d_model)
+    
+    def forward(self, w):
+        """
+        Perform forward pass.
+
+        Args:
+            w: word
+        Returns:
+            single output from the output layer at specified position.
+        """
+        # concatenate word embeddings and positional embeddings
+        x = self.word_embedding(w) + self.pos_encoding(len(w))
+        # encoder transformation
+        y = self.encoder(x.unsqueeze(1)).squeeze(1)
+        z = self.output_layer(y[0])
+        return z
+
+
+# Exact implementations
+
 class FirstExactTransformer(Transformer):
     """
     Transformer Encoder (without decoding step) to learn First language exactly.
@@ -175,11 +216,8 @@ class FirstExactTransformer(Transformer):
         """
 
 
-        print(w.shape)
         inter=self.pos_encoding(len(w))
-        print(inter.shape)
         inter2=self.word_embedding(w)
-        print(inter2.shape)
         # concatenate word embeddings and positional embeddings
         x = self.word_embedding(w) + self.pos_encoding(len(w))
         # encoder transformation

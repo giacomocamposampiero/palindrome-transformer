@@ -163,10 +163,10 @@ class PositionEncodingOne(torch.nn.Module):
 
         zero = torch.zeros(n)
         pos = torch.arange(0, n).to(torch.float)
-        pos = pos / self.size
+        pos = pos / n
         pe = torch.stack([pos] + [zero]*(self.size-1), dim=1)
         return pe
 
 # # DEBUG PE ONE
-# pos = PositionEncodingOne(3)
+# pos = PositionEncodingOne(5)
 # print(pos.forward(4))
