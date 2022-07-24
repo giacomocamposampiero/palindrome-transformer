@@ -167,7 +167,7 @@ class PositionEncodingOne(torch.nn.Module):
         pe = torch.stack([pos] + [zero]*(self.size-1), dim=1)
         return pe
 
-class PositionEncodingPalindrom(torch.nn.Module):
+class PositionEncodingPalindrome(torch.nn.Module):
     """
     Custom positional encoder layer for Palindrome learning 
     """
@@ -198,5 +198,5 @@ class PositionEncodingPalindrom(torch.nn.Module):
         return pe
 
 # # DEBUG PE 
-# pos = PositionEncodingPalindrom(5)
+# pos = PositionEncodingPalindrome(5)
 # print(pos.forward(4))
