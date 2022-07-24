@@ -167,6 +167,36 @@ class PositionEncodingOne(torch.nn.Module):
         pe = torch.stack([pos] + [zero]*(self.size-1), dim=1)
         return pe
 
-# # DEBUG PE ONE
-# pos = PositionEncodingOne(5)
+class PositionEncodingPalindrom(torch.nn.Module):
+    """
+    Custom positional encoder layer for Palindrome learning 
+    """
+
+    def __init__(self, size):
+        """
+        Initialize positional embedder.
+
+        Args:
+            size: max length of a sequence that can be encoded by the transformer (required).
+        """
+        super().__init__()
+        self.size = size
+
+    def forward(self, n):
+        """
+        Compute positional embeddings for a sequence of lenght n.
+
+        Args:
+            n: length of the sequence (required).
+        """
+        # TODO solve indices conflicts
+        zero = torch.zeros(n)
+        i1 = torch.arange(0, n).to(torch.float)
+        i2 = torch.arange(n-1, -1, step=-1).to(torch.float) # torch.arange(n, 0, step=-1).to(torch.float)
+        pe = torch.stack([zero]*3 + [i1] + [i2] + [i1 <= n/2] + [i1 >= n/2] + [zero]*(self.size-1), dim=1)
+        # pe = torch.stack([zero]*3 + [i1] + [i2] + [i1 <= (n+1)/2] + [i1 >= (n+1)/2] + [zero]*(self.size-1), dim=1)
+        return pe
+
+# # DEBUG PE 
+# pos = PositionEncodingPalindrom(5)
 # print(pos.forward(4))
