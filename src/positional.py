@@ -25,7 +25,7 @@ class PositionEncodingParity(torch.nn.Module):
         Initialize positional embedder.
 
         Args:
-            size: max length of a sequence that can be encoded by the transformer (requird).
+            size: max length of a sequence that can be encoded by the transformer (required).
         """
 
         super().__init__()
@@ -93,6 +93,7 @@ class PositionEncodingFirst(torch.nn.Module):
         pe = torch.stack([pos == 1] + [zero]*(self.size-1), dim=1)
         return pe
 
+
 class PositionEncodingFirstExact(torch.nn.Module):
     def __init__(self):
         """
@@ -130,3 +131,42 @@ class PositionEncodingParityExact(torch.nn.Module):
                          [zero]*5,
                          dim=1)
         return pe
+
+
+class PositionEncodingOne(torch.nn.Module):
+    """
+    Custom positional encoder layer for One learning and exact
+    In this case, the positional embedding function is defined as 
+    \begin{equation*}
+        pe_{ij} =  \frac{i}{n}
+    \end{equation*}
+    where i is the position of the word and n the size of the sequence.
+    """
+
+    def __init__(self, size):
+        """
+        Initialize positional embedder.
+
+        Args:
+            size: max length of a sequence that can be encoded by the transformer (required).
+        """
+        super().__init__()
+        self.size = size
+
+    def forward(self, n):
+        """
+        Compute positional embeddings for a sequence of lenght n.
+
+        Args:
+            n: length of the sequence (required).
+        """
+
+        zero = torch.zeros(n)
+        pos = torch.arange(0, n).to(torch.float)
+        pos = pos / self.size
+        pe = torch.stack([pos] + [zero]*(self.size-1), dim=1)
+        return pe
+
+# # DEBUG PE ONE
+# pos = PositionEncodingOne(3)
+# print(pos.forward(4))
