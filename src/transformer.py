@@ -18,7 +18,7 @@ class Transformer(torch.nn.Module):
         """
 
         super().__init__()
-        
+        torch.manual_seed(0)
         # word embedding layer
         self.word_embedding = torch.nn.Embedding(num_embeddings=alphabet_size, embedding_dim=d_model)
 

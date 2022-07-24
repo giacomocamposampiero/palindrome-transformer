@@ -87,6 +87,8 @@ class Trainer:
         train_acc = []
         val_acc = []
 
+        torch.manual_seed(0)
+
         for epoch in range(self.epochs):
             
             self.trainset.reset_index()
