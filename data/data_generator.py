@@ -147,7 +147,7 @@ def get_row(max_len):
 
 
 
-    sequence = '$' + ''.join([str(i) for i in sequence])
+    sequence = '$' + ''.join([str(i) for i in sequence]) + '$'
     return [sequence, label]
 
 random.seed(1)

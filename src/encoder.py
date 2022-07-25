@@ -1,5 +1,7 @@
 from typing import Optional
 
+from numpy import log as ln
+
 import torch
 from torch import Tensor
 import math
@@ -70,6 +72,8 @@ class ScaledTransformerEncoderLayer(StandardTransformerEncoderLayer):
                            attn_mask=attn_mask,
                            key_padding_mask=key_padding_mask)
         return self.dropout1(x)
+
+# -------------  Exact  ---------------  #
         
 class FirstExactEncoder(torch.nn.TransformerEncoder):
     
@@ -188,6 +192,7 @@ class FirstExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
     forward = FirstExactTransformerFirstLayer.forward
 
 
+# -------------  Parity ---------------  #
 
 class ParityExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
     def __init__(self):
@@ -292,3 +297,140 @@ class ParityExactEncoder(torch.nn.TransformerEncoder):
         ])
         self.num_layers = len(self.layers)
         self.norm = None
+
+
+# -------------  Palindrome ---------------  #
+
+class PalindromeExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
+    def __init__(self):
+        super().__init__(10, 2, 3, dropout=0.)
+        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(
+            
+            # W^Q
+            [[0]*10]*10 +
+
+            # W^K
+            [[0]*10]*10 +
+           
+            # W^V
+            [[0]*10]*10,
+            dtype=torch.float))
+
+        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(30))
+
+        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(
+            # W^O
+           
+            [[0]*10]*10,
+            dtype=torch.float))
+        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(10))
+
+        self.linear1.weight = torch.nn.Parameter(torch.tensor([
+            [-1,0,-1,0,0,1,0,0,0,0],  
+            [-1,0,-1,0,0,0,1,0,0,0]  
+        ], dtype=torch.float))
+        self.linear1.bias = torch.nn.Parameter(torch.zeros(2))
+        
+        self.linear2.weight = torch.nn.Parameter(torch.tensor(
+            [[0, 0]]*7 +
+            [[1, 0],  
+             [0, 1],
+             [0, 0]], 
+            dtype=torch.float))
+        self.linear2.bias = torch.nn.Parameter(torch.zeros(10))
+
+
+        
+    def forward(self, src, src_mask=None, src_key_padding_mask=None):
+        #print(src)
+        src2 = self.self_attn(src, src, src, attn_mask=src_mask,
+                              key_padding_mask=src_key_padding_mask)[0]
+        src = src + self.dropout1(src2)
+        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+        src = src + self.dropout2(src2)
+        #print("After doing the src")
+        #print(src)
+        return src
+
+class PalindromeExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
+    def __init__(self):
+        super().__init__(10, 2, 3, dropout=0.)
+        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(
+            # W^Q
+            # Heads 1
+            [[0,0,1,0,0,0,0,0,0,0]] +
+            [[0]*10]*4 +
+            # Head 2
+            [[0,0,1,0,0,0,0,0,0,0]] +
+            [[0]*10]*4 +
+
+
+            # W^K
+            # Head 1
+            [[0,0,0,1,0,0,0,0,0,0]] +
+            [[0]*10]*4 +
+            
+            # Head 2
+            [[0,0,0,0,1,0,0,0,0,0]] +
+            [[0]*10]*4 +
+           
+            # W^V
+            # Head 1
+            [[0,0,0,0,0,0,0,1,0,0]] +
+            [[0]*10]*4 +
+
+            # Head 2
+            [[0,0,0,0,0,0,0,0,1,0]] +
+            [[0]*10]*4,
+            dtype=torch.float))
+
+        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(30))
+
+        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(
+            
+            # W^O
+            [[0]*10]*8 +
+            [[0,0,0,0,0,0,0,0,0,0],
+             [1,0,0,0,0,-1,0,0,0,0]],
+
+            dtype=torch.float))
+        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(10))
+
+        self.linear1.weight = torch.nn.Parameter(torch.zeros(3,10))
+        self.linear1.bias = torch.nn.Parameter(torch.zeros(3))
+        self.linear2.weight = torch.nn.Parameter(torch.zeros(10,3))
+        self.linear2.bias = torch.nn.Parameter(torch.zeros(10))
+
+    def forward(self, src, src_mask=None, src_key_padding_mask=None):
+        #print("second layer")
+        #print(src)
+        q = src
+        v = src
+        src2 = self.self_attn(q, src, v, attn_mask=src_mask,
+                              key_padding_mask=src_key_padding_mask)[0]
+
+        src = src + self.dropout1(src2)
+
+        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+        src = src + self.dropout2(src2)
+        #print(src)
+        return src
+
+
+
+class PalindromeExactEncoder(torch.nn.TransformerEncoder):
+    def __init__(self):
+        torch.nn.Module.__init__(self)
+
+        self.layers = torch.nn.ModuleList([
+            PalindromeExactTransformerFirstLayer(),
+            PalindromeExactTransformerSecondLayer(),
+        ])
+
+        self.num_layers = len(self.layers)
+        self.norm = None
+
+
+
+
+

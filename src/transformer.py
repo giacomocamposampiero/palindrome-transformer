@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from xml.dom import NoModificationAllowedErr
 import torch
-from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact
-from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder, ParityExactEncoder
+from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact, PositionEncodingPalindromeExact
+from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder, ParityExactEncoder, PalindromeExactEncoder
 
 class Transformer(torch.nn.Module):
     """
@@ -188,8 +188,8 @@ class FirstExactTransformer(Transformer):
         return z
 
 class ParityExactTransformer(Transformer):
-    def __init__(self,alphabet_size,d_model):
-        super().__init__(alphabet_size,d_model)
+    def __init__(self, alphabet_size, d_model):
+        super().__init__(alphabet_size, d_model)
         # self.word_embedding = torch.eye(3, 10)
         self.pos_encoding = PositionEncodingParityExact()
         self.encoder = ParityExactEncoder()
@@ -204,3 +204,26 @@ class ParityExactTransformer(Transformer):
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
         return z
+
+
+class PalindromeExactTransformer(Transformer):
+    def __init__(self, alphabet_size, d_model):
+        super().__init__(alphabet_size, d_model)
+        self.exact_word_embedding = torch.eye(3, 10)
+        self.pos_encoding = PositionEncodingPalindromeExact()
+        self.encoder = PalindromeExactEncoder()
+        # self.output_layer = torch.nn.Linear(10, 1)
+        self.output_layer.weight = torch.nn.Parameter(torch.tensor(
+            [[0,0,0,0,0,0,0,0,0,1]], dtype=torch.float))
+        self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
+
+    def forward(self, w):
+        x = self.exact_word_embedding[w] + self.pos_encoding(len(w))
+        y = self.encoder(x.unsqueeze(1)).squeeze(1)
+        z = self.output_layer(y[0])
+        return z
+
+
+
+
+
