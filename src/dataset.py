@@ -153,12 +153,12 @@ class Dataset:
         if random.randint(0,1) == 1:
             # case (S)
             selected = random.randrange(len(alphabet))
-            return [*alphabet[selected][0], *self.__cfg_generate(length-1, alphabet), *alphabet[selected][1] ]
+            return [*alphabet[selected][0], *self.__generate_bracket_sequence(length-1, alphabet), *alphabet[selected][1] ]
         else:
             # case SS
             left_length = random.randrange(length+1)
             right_length = length - left_length
-            return [self.__cfg_generate(left_length, alphabet), *self.__cfg_generate(right_length, alphabet)]
+            return [self.__generate_bracket_sequence(left_length, alphabet), *self.__generate_bracket_sequence(right_length, alphabet)]
 
     
     def __valid_bracket_sequence(self, seq):
@@ -216,9 +216,10 @@ class Dataset:
                 index = random.randrange(len(sequence))
                 sequence[index] = (sequence[index] + 1) % 2
                 label = False
+            sequence = sequence + ['$']
         elif self.data_type == 'dyck1':
             half_len = seq_len // 2
-            sequence = self.__cfg_generate(half_len, [('(', ')')])
+            sequence = self.__generate_bracket_sequence(half_len, [('(', ')')])
             label = True
             # Validation of bracket sequence (can be removed)
             assert self.__valid_bracket_sequence(sequence)
@@ -239,7 +240,7 @@ class Dataset:
 
         elif self.data_type == 'dyck2':
             half_len = seq_len // 2
-            sequence = self.__cfg_generate(half_len)
+            sequence = self.__generate_bracket_sequence(half_len)
             label = True
 
             assert self.__valid_bracket_sequence(sequence)
