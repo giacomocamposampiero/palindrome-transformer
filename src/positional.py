@@ -130,7 +130,7 @@ class PositionEncodingParityExact(torch.nn.Module):
         return pe
 
 
-class PositionEncodingOne(torch.nn.Module):
+class PositionEncodingOneExact(torch.nn.Module):
     """
     Custom positional encoder layer for One learning and exact
     In this case, the positional embedding function is defined as 
@@ -164,7 +164,7 @@ class PositionEncodingOne(torch.nn.Module):
         pe = torch.stack([pos] + [zero]*(self.size-1), dim=1)
         return pe
 
-class PositionEncodingPalindrome(torch.nn.Module):
+class PositionEncodingPalindromeExact(torch.nn.Module):
     """
     Custom positional encoder layer for Palindrome learning 
     """
