@@ -254,10 +254,6 @@ class FirstExactTransformer(Transformer):
         Returns:
             single output from the output layer at specified position.
         """
-
-
-        inter=self.pos_encoding(len(w))
-        inter2=self.word_embedding(w)
         # concatenate word embeddings and positional embeddings
         x = self.word_embedding(w) + self.pos_encoding(len(w))
         # encoder transformation
