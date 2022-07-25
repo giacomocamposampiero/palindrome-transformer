@@ -94,6 +94,7 @@ class Trainer:
             train_loss = train_correct = 0    
             
             # train step
+            self.model.train()
             for x, y in self.trainset:
 
                 # forward step
@@ -117,6 +118,7 @@ class Trainer:
             train_acc.append(train_correct/self.trainset.size) # accuracy
                 
             # validation step
+            self.model.eval()
             with torch.no_grad():
 
                 test_loss = test_correct = 0
