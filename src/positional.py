@@ -192,7 +192,7 @@ class PositionEncodingPalindrome(torch.nn.Module):
         pe = torch.stack([zero]*3 + [i1] + [i2] + [i1 <= (n+1)/2] + [i1 >= (n+1)/2] + [zero]*(self.size-7), dim=1)
         return pe
 
-class StandardPositionalEncoder(torch.nn.Module):
+class StandardPositionalEncoding(torch.nn.Module):
     """
     Original sinuosidal postional encodings from (Vaswani et al. 2017).
     """
@@ -224,8 +224,10 @@ class StandardPositionalEncoder(torch.nn.Module):
         Args:
             n: length of the sequence (required).
         """
-        return self.pe[:,:n] 
+        return self.pe[:,:n].squeeze(0)
 
 # # DEBUG PE 
-# pos = StandardPositionalEncoder(5, 20)
-# print(pos.forward(4))
+# pos = StandardPositionalEncoding(5, 20)
+# print(pos.forward(4).shape)
+# pos = PositionEncodingOne(5)
+# print(pos.forward(4).shape)

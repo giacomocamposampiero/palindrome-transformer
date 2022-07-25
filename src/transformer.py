@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import torch
-from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact, PositionEncodingOne, PositionEncodingPalindrome
+from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact, PositionEncodingOne, PositionEncodingPalindrome, StandardPositionalEncoding
 from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder, ParityExactEncoder
 
 class Transformer(torch.nn.Module):
@@ -161,7 +161,7 @@ class OneTransformer(StandardTransformer):
         """
 
         super().__init__(alphabet_size, layers, heads, d_model, d_ffnn, scaled, eps)
-        self.pos_encoding = PositionEncodingOne(d_model)
+        self.pos_encoding = StandardPositionalEncoding(d_model)
     
     def forward(self, w):
         """
