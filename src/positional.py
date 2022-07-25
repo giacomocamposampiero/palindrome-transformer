@@ -25,7 +25,7 @@ class PositionEncodingParity(torch.nn.Module):
         Initialize positional embedder.
 
         Args:
-            size: max length of a sequence that can be encoded by the transformer (required).
+            size: size of the positional encodings.
         """
 
         super().__init__()
@@ -74,7 +74,7 @@ class PositionEncodingFirst(torch.nn.Module):
         Initialize positional embedder.
 
         Args:
-            size: max length of a sequence that can be encoded by the transformer (requird).
+            size: size of the positional encodings.
         """
 
         super().__init__()
@@ -99,11 +99,7 @@ class PositionEncodingFirstExact(torch.nn.Module):
     def __init__(self):
         """
         Initialize positional embedder.
-
-        Args:
-            size: max length of a sequence that can be encoded by the transformer (requird).
         """
-
         super().__init__()
 
     def forward(self, n):
@@ -196,6 +192,40 @@ class PositionEncodingPalindrome(torch.nn.Module):
         pe = torch.stack([zero]*3 + [i1] + [i2] + [i1 <= (n+1)/2] + [i1 >= (n+1)/2] + [zero]*(self.size-7), dim=1)
         return pe
 
+class StandardPositionalEncoder(torch.nn.Module):
+    """
+    Original sinuosidal postional encodings from (Vaswani et al. 2017).
+    """
+    
+    def __init__(self, size, max_len=10000):
+        """
+        Initialize positional embedder.
+
+        Args:
+            size: size of the positional encodings.
+            max_len: max length of the input sentence that can be encoded using these positional encodings
+        """
+        super().__init__()
+        self.size = size
+        
+        pe = torch.zeros(max_len, size)
+
+        for pos in range(max_len):
+            for i in range(0, size, 2):
+                pe[pos, i] = math.sin(pos / (10000 ** ((2 * i)/size)))
+                if i+1 < size: pe[pos, i + 1] = math.cos(pos / (10000 ** ((2 * (i + 1))/size)))
+
+        self.pe = pe.unsqueeze(0) 
+    
+    def forward(self, n):
+        """
+        Compute positional embeddings for a sequence of lenght n.
+
+        Args:
+            n: length of the sequence (required).
+        """
+        return self.pe[:,:n] 
+
 # # DEBUG PE 
-# pos = PositionEncodingPalindrome(5)
+# pos = StandardPositionalEncoder(5, 20)
 # print(pos.forward(4))

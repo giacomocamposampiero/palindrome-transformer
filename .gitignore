@@ -133,3 +133,5 @@ dmypy.json
 
 .DS_Store
 run.id
+
+notebooks/data
