@@ -301,136 +301,113 @@ class ParityExactEncoder(torch.nn.TransformerEncoder):
 
 # -------------  Palindrome ---------------  #
 
-class PalindromeExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
-    def __init__(self):
-        super().__init__(10, 2, 3, dropout=0.)
-        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(
-            
-            # W^Q
-            [[0]*10]*10 +
-
-            # W^K
-            [[0]*10]*10 +
-           
-            # W^V
-            [[0]*10]*10,
-            dtype=torch.float))
-
-        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(30))
-
-        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(
-            # W^O
-           
-            [[0]*10]*10,
-            dtype=torch.float))
-        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(10))
-
-        self.linear1.weight = torch.nn.Parameter(torch.tensor([
-            [-1,0,-1,0,0,1,0,0,0,0],  
-            [-1,0,-1,0,0,0,1,0,0,0]  
-        ], dtype=torch.float))
-        self.linear1.bias = torch.nn.Parameter(torch.zeros(2))
-        
-        self.linear2.weight = torch.nn.Parameter(torch.tensor(
-            [[0, 0]]*7 +
-            [[1, 0],  
-             [0, 1],
-             [0, 0]], 
-            dtype=torch.float))
-        self.linear2.bias = torch.nn.Parameter(torch.zeros(10))
-
-
-        
-    def forward(self, src, src_mask=None, src_key_padding_mask=None):
-        #print(src)
-        src2 = self.self_attn(src, src, src, attn_mask=src_mask,
-                              key_padding_mask=src_key_padding_mask)[0]
-        src = src + self.dropout1(src2)
-        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
-        src = src + self.dropout2(src2)
-        #print("After doing the src")
-        #print(src)
-        return src
-
-class PalindromeExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
-    def __init__(self):
-        super().__init__(10, 2, 3, dropout=0.)
-        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(
-            # W^Q
-            # Heads 1
-            [[0,0,1,0,0,0,0,0,0,0]] +
-            [[0]*10]*4 +
-            # Head 2
-            [[0,0,1,0,0,0,0,0,0,0]] +
-            [[0]*10]*4 +
-
-
-            # W^K
-            # Head 1
-            [[0,0,0,1,0,0,0,0,0,0]] +
-            [[0]*10]*4 +
-            
-            # Head 2
-            [[0,0,0,0,1,0,0,0,0,0]] +
-            [[0]*10]*4 +
-           
-            # W^V
-            # Head 1
-            [[0,0,0,0,0,0,0,1,0,0]] +
-            [[0]*10]*4 +
-
-            # Head 2
-            [[0,0,0,0,0,0,0,0,1,0]] +
-            [[0]*10]*4,
-            dtype=torch.float))
-
-        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(30))
-
-        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(
-            
-            # W^O
-            [[0]*10]*8 +
-            [[0,0,0,0,0,0,0,0,0,0],
-             [1,0,0,0,0,-1,0,0,0,0]],
-
-            dtype=torch.float))
-        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(10))
-
-        self.linear1.weight = torch.nn.Parameter(torch.zeros(3,10))
-        self.linear1.bias = torch.nn.Parameter(torch.zeros(3))
-        self.linear2.weight = torch.nn.Parameter(torch.zeros(10,3))
-        self.linear2.bias = torch.nn.Parameter(torch.zeros(10))
-
-    def forward(self, src, src_mask=None, src_key_padding_mask=None):
-        #print("second layer")
-        #print(src)
-        q = src
-        v = src
-        src2 = self.self_attn(q, src, v, attn_mask=src_mask,
-                              key_padding_mask=src_key_padding_mask)[0]
-
-        src = src + self.dropout1(src2)
-
-        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
-        src = src + self.dropout2(src2)
-        #print(src)
-        return src
-
-
-
 class PalindromeExactEncoder(torch.nn.TransformerEncoder):
-    def __init__(self):
+
+    def __init__(self, normalize, eps):
+        """
+            Custom encoder designed by use 
+
+            Args:
+                normalize: whether layer normalization should be applied
+                eps: the epsilone value for the layer normalization in both layers
+        """
         torch.nn.Module.__init__(self)
 
         self.layers = torch.nn.ModuleList([
-            PalindromeExactTransformerFirstLayer(),
-            PalindromeExactTransformerSecondLayer(),
+            PalindromeExactTransformerFirstLayer(normalize, eps),
+            PalindromeExactTransformerSecondLayer(normalize, eps),
         ])
 
         self.num_layers = len(self.layers)
         self.norm = None
 
+class PalindromeExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
+    def __init__(self, normalize, eps):
+        """
+        Custome double head attention
+        Args:
+            normalize: whether layer normalization should be applied
+            eps: the epsilone value for layer normalization in both layers
 
+        """
+        EMBED_DIM = 10
+        W_F1 = [[-1,0,-1,0,0,1,0,0,0,0],  
+            [-1,0,-1,0,0,0,1,0,0,0]]
+        b_F1 = [0,0]
+        W_F2 = [[0, 0]]*7 + [[1, 0],[0, 1],[0, 0]]
+        b_F2 = [0] * 10
 
+        super().__init__(d_model=EMBED_DIM, nhead=2, dim_feedforward=3, dropout=0.)
 
+        self.normalize = normalize 
+        self.norm1.eps = self.norm2.eps = eps
 
+        self.self_attn_in_project_weight = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM, EMBED_DIM))
+        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM))
+
+        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.zeros(EMBED_DIM, EMBED_DIM))
+        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(EMBED_DIM))
+
+        # First FFFN
+        self.linear1.weight = torch.nn.Parameter(torch.tensor(W_F1, dtype=torch.float))
+        self.linear1.bias = torch.nn.Parameter(torch.tensor(b_F1, dtype=torch.float))
+        
+        # Second FFN
+        self.linear2.weight = torch.nn.Parameter(torch.tensor(W_F2, dtype=torch.float))
+        self.linear2.bias = torch.nn.Parameter(torch.tensor(b_F2, dtype=torch.float))
+        
+    def forward(self, src, src_mask=None, src_key_padding_mask=None):
+        """
+        Pass the input through the encoder layer.
+
+        Args:
+            src: the sequence to the encoder layer (required).
+            src_mask: the mask for the src sequence (optional).
+            src_key_padding_mask: the mask for the src keys per batch (optional).
+
+        Shape:
+            see the docs in Transformer class.
+        """
+        src2 = self.self_attn(src, src, src, attn_mask=src_mask,
+                              key_padding_mask=src_key_padding_mask)[0]
+        src = src + self.dropout1(src2)
+        if self.normalize:
+            src = self.norm1(src)
+        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+        src = src + self.dropout2(src2)
+        if self.normalize:
+            src = self.norm2(src)
+        return src
+
+class PalindromeExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
+    def __init__(self, normalize, eps):
+        """
+        Custome double head attention
+        Args:
+            normalize: whether layer normalization should be applied
+            eps: the epsilone value for layer normalization in both layers
+
+        """
+        EMBED_DIM = 10
+        W_Q =[[0,0,1,0,0,0,0,0,0,0]] + [[0]*10]*4 + [[0,0,1,0,0,0,0,0,0,0]] + [[0]*10]*4 
+        W_K =[[0,0,0,1,0,0,0,0,0,0]] + [[0]*10]*4 +[[0,0,0,0,1,0,0,0,0,0]] + [[0]*10]*4
+        W_V =[[0,0,0,0,0,0,0,1,0,0]] + [[0]*10]*4 +[[0,0,0,0,0,0,0,0,1,0]] + [[0]*10]*4
+        W_O = [[0]*10]*8 + [[0,0,0,0,0,0,0,0,0,0],[1,0,0,0,0,-1,0,0,0,0]]
+
+        super().__init__(d_model=EMBED_DIM, nhead=2, dim_feedforward=3, dropout=0.0)
+
+        self.normalize = normalize
+        self.norm1.eps = self.norm2.eps = eps
+
+        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(W_Q + W_K + W_V, dtype=torch.float))
+        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM))
+
+        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(W_O, dtype=torch.float))
+        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(EMBED_DIM))
+
+        self.linear1.weight = torch.nn.Parameter(torch.zeros(3, EMBED_DIM))
+        self.linear1.bias = torch.nn.Parameter(torch.zeros(3))
+        self.linear2.weight = torch.nn.Parameter(torch.zeros(EMBED_DIM,3))
+        self.linear2.bias = torch.nn.Parameter(torch.zeros(EMBED_DIM))
+
+    forward = PalindromeExactTransformerFirstLayer.forward

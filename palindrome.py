@@ -12,7 +12,7 @@ epochs = 20
 d_model = 10
 alphabet_index = {a : i for i, a in enumerate(alphabet)}
 
-train = pd.read_csv("data/palindrome/train_n10000_l100.csv")
+train = pd.read_csv("data/palindrome/train_n10000_l10.csv")
 test = pd.read_csv("data/palindrome/test_n100_l100.csv")
 X_train, y_train = train['sequence'].values, train['label'].values
 X_test, y_test = test['sequence'].values, test['label'].values
@@ -52,7 +52,7 @@ for epoch in range(epochs):
     
     correct = 0
     incorrect = 0
-    EPS = 1e-3
+    EPS = 1e-5
     # train step
     for x, y in zip(X_train, y_train):
 
@@ -66,7 +66,7 @@ for epoch in range(epochs):
         #print("output : ", output, y, x)
 
         is_palindrome = False
-        if abs(float(output[0])) <= 10:
+        if abs(float(output[0])) <= EPS:
             is_palindrome = True
 
         if y == is_palindrome:

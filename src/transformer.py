@@ -175,14 +175,9 @@ class FirstExactTransformer(Transformer):
         """
 
 
-        print(w.shape)
         inter=self.pos_encoding(len(w))
-        print(inter.shape)
         inter2=self.word_embedding(w)
-        print(inter2.shape)
-        # concatenate word embeddings and positional embeddings
         x = self.word_embedding(w) + self.pos_encoding(len(w))
-        # encoder transformation
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
         return z
@@ -207,17 +202,36 @@ class ParityExactTransformer(Transformer):
 
 
 class PalindromeExactTransformer(Transformer):
-    def __init__(self, alphabet_size, d_model):
+    """
+    Transformer Encoder (without decoding step) to learn Palindrome language exactly (theoretically)
+    """
+
+    def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5):
+        """
+        Initialize Transformer module.
+        Args:
+            alphabet_size: |Σ|
+            d_model: the number of expected features in the encoder/decoder inputs.
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
+        """
         super().__init__(alphabet_size, d_model)
         self.exact_word_embedding = torch.eye(3, 10)
         self.pos_encoding = PositionEncodingPalindromeExact()
-        self.encoder = PalindromeExactEncoder()
-        # self.output_layer = torch.nn.Linear(10, 1)
+        self.encoder = PalindromeExactEncoder(normalize, eps)
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,0,0,0,0,1]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
 
     def forward(self, w):
+        """
+        Perform forward pass.
+        Args:
+            w: word
+            pos: position of the output layer to return
+        Returns:
+            single output from the output layer at specified position.
+        """
         x = self.exact_word_embedding[w] + self.pos_encoding(len(w))
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])

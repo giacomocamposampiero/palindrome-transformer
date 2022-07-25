@@ -133,35 +133,33 @@ class PositionEncodingParityExact(torch.nn.Module):
 
 class PositionEncodingPalindromeExact(torch.nn.Module):
     def __init__(self):
+        """
+        Initialize positional embedder.
+        """
         super().__init__()
 
     def forward(self, n):
-        # D = 10
-        # 0, 0, 0, 2^i, 2^(n - i), I[i <= (n + 1)/2], I[i >= (n + 1)/2], 0, 0, 0
-
+        """
+        Compute positional embeddings for a sequence of lenght n.
+        Args:
+            n: length of the sequence (required).
+        """
         zero = torch.zeros(n)
-        pos = torch.arange(0, n).to(torch.float)
-
         pow2 = torch.zeros(n) # 2^i
-        pow2inv = torch.zeros(n) # 2^(n - i)
-        indicator_less = torch.zeros(n) # I[i <= (n + 1) / 2]
-        indicator_greater = torch.zeros(n) # I[i >= (n + 1) / 2]
+        pow2inv = torch.zeros(n) # 2^(n - i - 1)
+        indicator_less = torch.zeros(n) # I[i <= (n - 1) / 2]
+        indicator_greater = torch.zeros(n) # I[i >= (n - 1) / 2]
 
         for i in range(n):
             pow2[i] = i 
-
         for i in range(n):
             pow2inv[i] = n - i - 1
-
         for i in range(n):
             if i <= (n-1) / 2:
                 indicator_less[i] = 1
-
         for i in range(n):
             if i >= (n-1) / 2:
                 indicator_greater[i] = 1
-
-
         pe = torch.stack([zero]*3 +
                         [pow2] + 
                         [pow2inv] +
