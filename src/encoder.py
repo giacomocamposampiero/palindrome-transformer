@@ -194,109 +194,202 @@ class FirstExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
 
 # -------------  Parity ---------------  #
 
+class ParityExactEncoder(torch.nn.TransformerEncoder):
+    def __init__(self, normalize, eps):
+        """
+            Custom encoder designed by use 
+
+            Args:
+                normalize: whether layer normalization should be applied
+                eps: the epsilone value for the layer normalization in both layers
+        """
+        torch.nn.Module.__init__(self)
+
+        self.layers = torch.nn.ModuleList([
+            ParityExactTransformerFirstLayer(normalize, eps),
+            ParityExactTransformerSecondLayer(normalize, eps),
+        ])
+        self.num_layers = len(self.layers)
+        self.norm = None
+
 class ParityExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
-    def __init__(self):
-        super().__init__(10, 2, 3, dropout=0.)
-        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(
-            
-            [[0]*10]*10 +
-            
-            [[0]*10]*10 +
-           
-            [[0,1,0,0,0,0,0,0,0,0],   
-             [0,0,1,0,0,0,0,0,0,0]]+   
-            [[0]*10]*8,
-            dtype=torch.float))
+    def __init__(self, normalize, eps):
+        """
+        Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
+        Args:
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
+        """
+        EMBED_DIM = 10
+        W_Q = [[0]*EMBED_DIM] * EMBED_DIM
+        W_K = [[0]*EMBED_DIM] * EMBED_DIM
+        W_V = [[0,1,0,0,0,0,0,0,0,0], [0,0,1,0,0,0,0,0,0,0]] + [[0]*EMBED_DIM] * 8
+        W_O = [[0]*EMBED_DIM] * 5 + [[1,0,0,0,0,0,0,0,0,0], [0,1,0,0,0,0,0,0,0,0]] + [[0]*EMBED_DIM] * 3
 
-        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(30))
+        W_F1 = [[0,0,0,-1,0,1,-1,0,0,0],[0,0,0,-1,0,1, 0,0,0,0],[0,0,0,-1,0,1, 1,0,0,0]]
+        b_F1 = [0] * 3
 
-        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(
-           
-            [[0]*10]*5 +
-            [[1,0,0,0,0,0,0,0,0,0],   
-             [0,1,0,0,0,0,0,0,0,0]] +
-            [[0]*10]*3,
-            dtype=torch.float))
-        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(10))
+        W_F2 = [[0,0,0]]*7 + [[1,-2,1]] + [[0,0,0]]*2
+        b_F2 = [0] * EMBED_DIM
 
-        self.linear1.weight = torch.nn.Parameter(torch.tensor([
-            [0,0,0,-1,0,1,-1,0,0,0],  
-            [0,0,0,-1,0,1, 0,0,0,0],  
-            [0,0,0,-1,0,1, 1,0,0,0],  
-        ], dtype=torch.float))
-        self.linear1.bias = torch.nn.Parameter(torch.zeros(3))
-        self.linear2.weight = torch.nn.Parameter(torch.tensor(
-            [[0, 0, 0]]*7 +
-            [[1,-2, 1],  
-             [0, 0, 0],
-             [0, 0, 0]], 
-            dtype=torch.float))
-        self.linear2.bias = torch.nn.Parameter(torch.zeros(10))
+
+        super().__init__(EMBED_DIM, nhead=2, dim_feedforward=3, dropout=0.)
+
+        self.normalize = normalize
+        self.norm1.eps = self.norm2.eps = eps
+
+        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(W_Q + W_K + W_V, dtype=torch.float))
+        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM))
+
+        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(W_O, dtype=torch.float))
+        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(EMBED_DIM))
+
+        self.linear1.weight = torch.nn.Parameter(torch.tensor(W_F1, dtype=torch.float))
+        self.linear1.bias = torch.nn.Parameter(torch.tensor(b_F1, dtype=torch.float))
+
+        self.linear2.weight = torch.nn.Parameter(torch.tensor(W_F2, dtype=torch.float))
+        self.linear2.bias = torch.nn.Parameter(torch.tensor(b_F2, dtype=torch.float))
         
     def forward(self, src, src_mask=None, src_key_padding_mask=None):
         src2 = self.self_attn(src, src, src, attn_mask=src_mask,
                               key_padding_mask=src_key_padding_mask)[0]
         src = src + self.dropout1(src2)
+        if self.normalize:
+            src = self.norm1(src)
         src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
         src = src + self.dropout2(src2)
+        if self.normalize:
+            src = self.norm2(src)
         return src
 
 class ParityExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
-    def __init__(self):
-        super().__init__(10, 2, 3, dropout=0.)
-        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(
-            [[0,0,1,0,0,0,0,0,0,0]] +
-            [[0]*10]*4 +
-            [[0,0,1,0,0,0,0,0,0,0]] +
-            [[0]*10]*4 +
+    def __init__(self, normalize, eps):
+        """
+        Custom single head attention layer as described in https://arxiv.org/pdf/2202.12172.pdf.
+        Args:
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
+        """
+
+        EMBED_DIM = 10
+        W_Q = [[0,0,1,0,0,0,0,0,0,0]] + [[0]*EMBED_DIM]*4 + [[0,0,1,0,0,0,0,0,0,0]] + [[0]*EMBED_DIM]*4 
+        W_K = [[0,0,0,0,1,0,0,0,0,0]] + [[0]*EMBED_DIM]*4 + [[0,0,0,0,-1,0,0,0,0,0]] + [[0]*EMBED_DIM]*4
+        W_V = [[0,0,0,0,0,0,0,1,0,0]] + [[0]*EMBED_DIM]*4 + [[0,0,0,0,0,0,0,1,0,0]] + [[0]*EMBED_DIM]*4
+        W_O = [[0]*EMBED_DIM]*8 +[[-1,0,0,0,0,1,0,0,0,0], [0,0,0,0,0,0,0,0,0,0]]
            
-            [[0,0,0,0, 1,0,0,0,0,0]] +
-            [[0]*10]*4 +
-            
-            [[0,0,0,0,-1,0,0,0,0,0]] +
-            [[0]*10]*4 +
-           
-            [[0,0,0,0,0,0,0,1,0,0]] +
-            [[0]*10]*4 +
-            [[0,0,0,0,0,0,0,1,0,0]] +
-            [[0]*10]*4,
-            dtype=torch.float))
+        super().__init__(EMBED_DIM, nhead=2, dim_feedforward=3, dropout=0.)
 
-        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(30))
+        self.normalize = normalize
+        self.norm1.eps = self.norm2.eps = eps
 
-        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(
-            
-            [[0]*10]*8 +
-            [[-1,0,0,0,0,1,0,0,0,0],
-             [0,0,0,0,0,0,0,0,0,0]],
-            dtype=torch.float))
-        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(10))
+        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(W_Q + W_K + W_V, dtype=torch.float))
+        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM))
 
-        self.linear1.weight = torch.nn.Parameter(torch.zeros(3,10))
+        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(W_O, dtype=torch.float))
+        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(EMBED_DIM))
+
+        self.linear1.weight = torch.nn.Parameter(torch.zeros(3,EMBED_DIM))
         self.linear1.bias = torch.nn.Parameter(torch.zeros(3))
-        self.linear2.weight = torch.nn.Parameter(torch.zeros(10,3))
-        self.linear2.bias = torch.nn.Parameter(torch.zeros(10))
 
-    def forward(self, src, src_mask=None, src_key_padding_mask=None):
-        q = src
-        v = src
-        src2 = self.self_attn(q, src, v, attn_mask=src_mask,
-                              key_padding_mask=src_key_padding_mask)[0]
-        src = src + self.dropout1(src2)
-        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
-        src = src + self.dropout2(src2)
-        return src
+        self.linear2.weight = torch.nn.Parameter(torch.zeros(EMBED_DIM,3))
+        self.linear2.bias = torch.nn.Parameter(torch.zeros(EMBED_DIM))
 
-class ParityExactEncoder(torch.nn.TransformerEncoder):
-    def __init__(self):
+    forward = ParityExactTransformerFirstLayer.forward
+
+# -------------  One ---------------  #
+
+class OneExactEncoder(torch.nn.TransformerEncoder):
+
+    def __init__(self, normalize, eps):
+        """
+            Custom encoder designed by use 
+
+            Args:
+                normalize: whether layer normalization should be applied
+                eps: the epsilone value for the layer normalization in both layers
+        """
         torch.nn.Module.__init__(self)
 
         self.layers = torch.nn.ModuleList([
-            ParityExactTransformerFirstLayer(),
-            ParityExactTransformerSecondLayer(),
+            OneExactTransformerFirstLayer(normalize, eps)
         ])
+
         self.num_layers = len(self.layers)
         self.norm = None
+
+class OneExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
+    def __init__(self, normalize, eps):
+        """
+        Custome single head attention
+        Args:
+            normalize: whether layer normalization should be applied
+            eps: the epsilone value for layer normalization in both layers
+
+        """
+
+        EMBED_DIM = 7
+        W_Q =[[0]*EMBED_DIM]*EMBED_DIM
+        W_K =[[0]*EMBED_DIM]*EMBED_DIM
+        W_V =[[0,1,0,0,0,0,0],[0,0,1,0,0,0,0]] + [[0]*EMBED_DIM]*5
+
+
+        W_O = [[0]*EMBED_DIM]*4 + [[1,0,0,0,0,0,0], [0,1,0,0,0,0,0]] + [[0] * EMBED_DIM]
+
+
+        W_F1 = [[0,0,0,0,1,-2,0],  
+                [0,0,0,0,1,-1,0],
+                [0,0,0,0,1,0,0],
+                [0,0,0,0,0,1,0]]
+        b_F1 = [[0]*4]
+        W_F2 = [[0,0,0,0]]*6 + [[1, -2, 1, -0.5]]
+        b_F2 = [[0]*7]
+
+        super().__init__(d_model=EMBED_DIM, nhead=1, dim_feedforward=3, dropout=0.)
+
+        self.normalize = normalize 
+        self.norm1.eps = self.norm2.eps = eps
+
+        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.tensor(W_Q + W_K + W_V, dtype=torch.float))
+        self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM))
+
+        self.self_attn.out_proj.weight = torch.nn.Parameter(torch.tensor(W_O, dtype=torch.float))
+        self.self_attn.out_proj.bias = torch.nn.Parameter(torch.zeros(EMBED_DIM))
+
+        # First FFFN
+        self.linear1.weight = torch.nn.Parameter(torch.tensor(W_F1, dtype=torch.float))
+        self.linear1.bias = torch.nn.Parameter(torch.tensor(b_F1, dtype=torch.float))
+        
+        # Second FFN
+        self.linear2.weight = torch.nn.Parameter(torch.tensor(W_F2, dtype=torch.float))
+        self.linear2.bias = torch.nn.Parameter(torch.tensor(b_F2, dtype=torch.float))
+        
+    def forward(self, src, src_mask=None, src_key_padding_mask=None):
+        """
+        Pass the input through the encoder layer.
+
+        Args:
+            src: the sequence to the encoder layer (required).
+            src_mask: the mask for the src sequence (optional).
+            src_key_padding_mask: the mask for the src keys per batch (optional).
+
+        Shape:
+            see the docs in Transformer class.
+        """
+        src2 = self.self_attn(src, src, src, attn_mask=src_mask,
+                              key_padding_mask=src_key_padding_mask)[0]
+        src = src + self.dropout1(src2)
+        if self.normalize:
+            src = self.norm1(src)
+
+
+        src2 = self.linear2(self.dropout(self.activation(self.linear1(src))))
+        src = src + self.dropout2(src2)
+        if self.normalize:
+            src = self.norm2(src)
+        return src
+
+
+
 
 
 # -------------  Palindrome ---------------  #
@@ -342,7 +435,7 @@ class PalindromeExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
         self.normalize = normalize 
         self.norm1.eps = self.norm2.eps = eps
 
-        self.self_attn_in_project_weight = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM, EMBED_DIM))
+        self.self_attn.in_proj_weight = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM, EMBED_DIM))
         self.self_attn.in_proj_bias = torch.nn.Parameter(torch.zeros(3 * EMBED_DIM))
 
         self.self_attn.out_proj.weight = torch.nn.Parameter(torch.zeros(EMBED_DIM, EMBED_DIM))
@@ -392,7 +485,7 @@ class PalindromeExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
         W_Q =[[0,0,1,0,0,0,0,0,0,0]] + [[0]*10]*4 + [[0,0,1,0,0,0,0,0,0,0]] + [[0]*10]*4 
         W_K =[[0,0,0,1,0,0,0,0,0,0]] + [[0]*10]*4 +[[0,0,0,0,1,0,0,0,0,0]] + [[0]*10]*4
         W_V =[[0,0,0,0,0,0,0,1,0,0]] + [[0]*10]*4 +[[0,0,0,0,0,0,0,0,1,0]] + [[0]*10]*4
-        W_O = [[0]*10]*8 + [[0,0,0,0,0,0,0,0,0,0],[1,0,0,0,0,-1,0,0,0,0]]
+        W_O = [[0]*10]*8 + [[0,0,0,0,0,0,0,0,0,0], [1,0,0,0,0,-1,0,0,0,0]]
 
         super().__init__(d_model=EMBED_DIM, nhead=2, dim_feedforward=3, dropout=0.0)
 

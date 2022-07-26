@@ -1,4 +1,4 @@
-from src.transformer import PalindromeExactTransformer
+from src.transformer import FirstExactTransformer
 import torch
 import pandas as pd
 
@@ -9,11 +9,12 @@ log_sigmoid = torch.nn.LogSigmoid()
 alphabet = ["0", "1", "$"]
 
 epochs = 20
-d_model = 10
+d_model = 6
 alphabet_index = {a : i for i, a in enumerate(alphabet)}
 
-train = pd.read_csv("data/palindrome/train_n10000_l10.csv")
-test = pd.read_csv("data/palindrome/test_n100_l100.csv")
+
+train = pd.read_csv("data/first/test_n2000_l1000.csv")
+test = pd.read_csv("data/first/test_n100_l100.csv")
 X_train, y_train = train['sequence'].values, train['label'].values
 X_test, y_test = test['sequence'].values, test['label'].values
 
@@ -27,7 +28,7 @@ X_train = [_encode(s) for s in X_train]
 X_test = [_encode(s) for s in X_test]
 
 
-transformer = PalindromeExactTransformer(len(alphabet), d_model)
+transformer = FirstExactTransformer(len(alphabet), d_model)
 for param in transformer.named_parameters():
     print(param[0])
     print(param[1])
@@ -56,17 +57,20 @@ for epoch in range(epochs):
     # train step
     for x, y in zip(X_train, y_train):
 
+        print("------------------------")
         output = transformer(x)
-        print(output, y)
         print("Correct : ", correct)
         print("Incorrect : ", incorrect)
  
+        #print("output : ", output, y, x)
+
         if y == output:
             correct += 1
         else:
             incorrect += 1
 
         cnt += 1
+        print("------------------------")
 
 
 

@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from xml.dom import NoModificationAllowedErr
 import torch
-from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact, PositionEncodingPalindromeExact
-from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder, ParityExactEncoder, PalindromeExactEncoder
+from .positional import PositionEncodingFirst, PositionEncodingParity, PositionEncodingFirstExact, PositionEncodingParityExact, PositionEncodingPalindromeExact, PositionEncodingOneExact
+from .encoder import ScaledTransformerEncoderLayer, StandardTransformerEncoderLayer, FirstExactEncoder, ParityExactEncoder, PalindromeExactEncoder, OneExactEncoder
 
 class Transformer(torch.nn.Module):
     """
@@ -141,6 +141,8 @@ class ParityTransformer(StandardTransformer):
         z = self.output_layer(y[-1])
         return z
 
+# --------------------- Exact Transformers ----------------------- #
+
 class FirstExactTransformer(Transformer):
     """
     Transformer Encoder (without decoding step) to learn First language exactly.
@@ -157,6 +159,7 @@ class FirstExactTransformer(Transformer):
             eps: the epsilon value for layer normalization in both layers
         """
         super().__init__(alphabet_size, d_model)
+        self.exact_word_embedding = torch.eye(3, d_model)
         self.pos_encoding = PositionEncodingFirstExact()
         self.encoder = FirstExactEncoder(normalize=normalize, eps=eps)
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
@@ -173,39 +176,70 @@ class FirstExactTransformer(Transformer):
         Returns:
             single output from the output layer at specified position.
         """
-
-
-        inter=self.pos_encoding(len(w))
-        inter2=self.word_embedding(w)
-        x = self.word_embedding(w) + self.pos_encoding(len(w))
+        x = self.exact_word_embedding[w] + self.pos_encoding(len(w))
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
-        return z
+        output = self.activation(z)
+        return output
+
+    def activation(self, z):
+        z = z[0]
+        if z > 0:
+            # There is a one in the first position
+            return True
+        else:
+            # There is not a one in the first position
+            return False
 
 class ParityExactTransformer(Transformer):
-    def __init__(self, alphabet_size, d_model):
+    def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5):
+        """
+        Initialize Transformer module.
+
+        Args:
+            alphabet_size: |Σ|
+            d_model: the number of expected features in the encoder/decoder inputs.
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
+        """
         super().__init__(alphabet_size, d_model)
-        # self.word_embedding = torch.eye(3, 10)
+        self.exact_word_embedding = torch.eye(3, d_model)
         self.pos_encoding = PositionEncodingParityExact()
-        self.encoder = ParityExactEncoder()
-        # self.output_layer = torch.nn.Linear(10, 1)
+        self.encoder = ParityExactEncoder(normalize=normalize, eps=eps)
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,0,0,0,1,0]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
 
     def forward(self, w):
-        
-        x = self.word_embedding(w) + self.pos_encoding(len(w))
+        """
+        Perform forward pass.
+        Args:
+            w: word
+            pos: position of the output layer to return
+        Returns:
+            single output from the output layer at specified position.
+        """
+        x = self.exact_word_embedding[w] + self.pos_encoding(len(w))
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
-        return z
+        output = self.activation(z)
+        return output
+
+    def activation(self, z):
+        z = z[0]
+        if z > 0:
+            # has odd number of ones
+            return False
+        else:
+            # has even number of ones
+            return True
+        
 
 
-class PalindromeExactTransformer(Transformer):
+class OneExactTransformer(Transformer):
     """
-    Transformer Encoder (without decoding step) to learn Palindrome language exactly (theoretically)
+    Transformer Encoder (without decoding step) to learn One language exactly
     """
-
     def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5):
         """
         Initialize Transformer module.
@@ -216,7 +250,53 @@ class PalindromeExactTransformer(Transformer):
             eps: the epsilon value for layer normalization in both layers
         """
         super().__init__(alphabet_size, d_model)
-        self.exact_word_embedding = torch.eye(3, 10)
+        self.exact_word_embedding = torch.eye(3, d_model)
+        self.pos_encoding = PositionEncodingOneExact()
+        self.encoder = OneExactEncoder(normalize, eps)
+        self.output_layer.weight = torch.nn.Parameter(torch.tensor(
+            [[0,0,0,0,0,0,1]], dtype=torch.float))
+        self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
+
+    def forward(self, w):
+        """
+        Perform forward pass.
+        Args:
+            w: word
+            pos: position of the output layer to return
+        Returns:
+            single output from the output layer at specified position.
+        """
+        x = self.exact_word_embedding[w] + self.pos_encoding(len(w))
+        y = self.encoder(x.unsqueeze(1)).squeeze(1)
+        z = self.output_layer(y[0])
+        output = self.activation(z)
+        return output
+
+    def activation(self, z):
+        z = z[0]
+        if z >= 1e-5:
+            # Only contains a single one
+            return True
+        else:
+            # Does not contain a single one
+            return False
+
+class PalindromeExactTransformer(Transformer):
+    """
+    Transformer Encoder (without decoding step) to learn Palindrome language exactly (theoretically)
+    """
+    def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5, error=1e-7):
+        """
+        Initialize Transformer module.
+        Args:
+            alphabet_size: |Σ|
+            d_model: the number of expected features in the encoder/decoder inputs.
+            normalize: whether layer normalization should be applied
+            eps: the epsilon value for layer normalization in both layers
+        """
+        super().__init__(alphabet_size, d_model)
+        self.error = error
+        self.exact_word_embedding = torch.eye(3, d_model)
         self.pos_encoding = PositionEncodingPalindromeExact()
         self.encoder = PalindromeExactEncoder(normalize, eps)
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
@@ -235,7 +315,17 @@ class PalindromeExactTransformer(Transformer):
         x = self.exact_word_embedding[w] + self.pos_encoding(len(w))
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
-        return z
+        output = self.activation(z)
+        return output
+
+    def activation(self, z):
+        z = z[0]
+        if abs(z) <= self.error:
+            # Is palindrome if z = 0, or precision error to 0 is close enough
+            return True
+        else:
+            # Otherwise it is not a palindrome
+            return False
 
 
 

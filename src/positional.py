@@ -131,6 +131,27 @@ class PositionEncodingParityExact(torch.nn.Module):
                          dim=1)
         return pe
 
+class PositionEncodingOneExact(torch.nn.Module):
+    def __init__(self):
+        """
+        Initialize positional embedder.
+        """
+        super().__init__()
+
+    def forward(self, n):
+        """
+        Compute positional embeddings for a sequence of lenght n.
+        Args:
+            n: length of the sequence (required).
+        """
+        zero = torch.zeros(n)
+        pos = torch.arange(0, n).to(torch.float)
+        pe = torch.stack([zero]*3 +
+                         [pos / n] + 
+                         [zero]*3,
+                         dim=1)
+        return pe
+
 class PositionEncodingPalindromeExact(torch.nn.Module):
     def __init__(self):
         """

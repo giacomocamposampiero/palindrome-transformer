@@ -94,6 +94,7 @@ def get_row(max_len):
             index = random.randrange(len(sequence))
             sequence[index] = (sequence[index] + 1) % 2
             label = False
+        sequence.append('$')
     elif args.data_type == 'dyck1':
         half_len = seq_len // 2
         sequence = cfg_generate(half_len, [('(', ')')])
@@ -114,7 +115,6 @@ def get_row(max_len):
                 indecies = get_indecies(sequence, ')')
                 index = indecies[random.randrange(len(indecies))]
                 sequence[index] = '('
-
     elif args.data_type == 'dyck2':
         half_len = seq_len // 2
         sequence = cfg_generate(half_len)
@@ -146,8 +146,7 @@ def get_row(max_len):
                     sequence[index] = '{'
 
 
-
-    sequence = '$' + ''.join([str(i) for i in sequence]) + '$'
+    sequence = '$' + ''.join([str(i) for i in sequence])
     return [sequence, label]
 
 random.seed(1)
@@ -168,4 +167,4 @@ with open(f'{args.data_type}/train_n{args.train_size}_l{args.train_length}{varia
 with open(f'{args.data_type}/test_n{args.test_size}_l{args.test_length}{variable_str}.csv', 'w') as file:
     writer = csv.writer(file)
     writer.writerow(cols)
-    writer.writerows(train_rows)
+    writer.writerows(test_rows)
