@@ -274,7 +274,7 @@ class OneExactTransformer(Transformer):
 
     def activation(self, z):
         z = z[0]
-        if z >= 1e-5:
+        if z > 0:
             # Only contains a single one
             return True
         else:

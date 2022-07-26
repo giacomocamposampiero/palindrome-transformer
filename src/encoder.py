@@ -73,7 +73,7 @@ class ScaledTransformerEncoderLayer(StandardTransformerEncoderLayer):
                            key_padding_mask=key_padding_mask)
         return self.dropout1(x)
 
-# -------------  Exact  ---------------  #
+# -------------  First Exact  ---------------  #
         
 class FirstExactEncoder(torch.nn.TransformerEncoder):
     
@@ -192,7 +192,7 @@ class FirstExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
     forward = FirstExactTransformerFirstLayer.forward
 
 
-# -------------  Parity ---------------  #
+# -------------  Parity Exact ---------------  #
 
 class ParityExactEncoder(torch.nn.TransformerEncoder):
     def __init__(self, normalize, eps):
@@ -296,7 +296,7 @@ class ParityExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
 
     forward = ParityExactTransformerFirstLayer.forward
 
-# -------------  One ---------------  #
+# -------------  One Exact ---------------  #
 
 class OneExactEncoder(torch.nn.TransformerEncoder):
 
@@ -342,7 +342,7 @@ class OneExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
                 [0,0,0,0,0,1,0]]
         b_F1 = [[0]*4]
         W_F2 = [[0,0,0,0]]*6 + [[1, -2, 1, -0.5]]
-        b_F2 = [[0]*7]
+        b_F2 = [[0]*EMBED_DIM]
 
         super().__init__(d_model=EMBED_DIM, nhead=1, dim_feedforward=3, dropout=0.)
 
@@ -392,7 +392,7 @@ class OneExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
 
 
 
-# -------------  Palindrome ---------------  #
+# -------------  Palindrome Exact ---------------  #
 
 class PalindromeExactEncoder(torch.nn.TransformerEncoder):
 
@@ -428,7 +428,7 @@ class PalindromeExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
             [-1,0,-1,0,0,0,1,0,0,0]]
         b_F1 = [0,0]
         W_F2 = [[0, 0]]*7 + [[1, 0],[0, 1],[0, 0]]
-        b_F2 = [0] * 10
+        b_F2 = [0] * EMBED_DIM
 
         super().__init__(d_model=EMBED_DIM, nhead=2, dim_feedforward=3, dropout=0.)
 

@@ -166,15 +166,15 @@ class PositionEncodingPalindromeExact(torch.nn.Module):
             n: length of the sequence (required).
         """
         zero = torch.zeros(n)
-        pow2 = torch.zeros(n) # 2^i
-        pow2inv = torch.zeros(n) # 2^(n - i - 1)
+        indicator_left = torch.zeros(n) # i
+        indicator_right = torch.zeros(n) # n - i - 1
         indicator_less = torch.zeros(n) # I[i <= (n - 1) / 2]
         indicator_greater = torch.zeros(n) # I[i >= (n - 1) / 2]
 
         for i in range(n):
-            pow2[i] = i 
+            indicator_left[i] = i 
         for i in range(n):
-            pow2inv[i] = n - i - 1
+            indicator_right[i] = n - i - 1
         for i in range(n):
             if i <= (n-1) / 2:
                 indicator_less[i] = 1
@@ -182,8 +182,8 @@ class PositionEncodingPalindromeExact(torch.nn.Module):
             if i >= (n-1) / 2:
                 indicator_greater[i] = 1
         pe = torch.stack([zero]*3 +
-                        [pow2] + 
-                        [pow2inv] +
+                        [indicator_left] + 
+                        [indicator_right] +
                         [indicator_less] + 
                         [indicator_greater] + 
                          [zero]*3,
