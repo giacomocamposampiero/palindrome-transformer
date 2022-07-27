@@ -5,7 +5,7 @@
 - [x] First Learned
 - [x] First Exact 
 - [x] Parity Learned
-- [ ] Parity Exact
+- [X] Parity Exact
 - [x] Theory ONE
 - [x] Theory Palyndrome
 - [ ] ONE Learned
