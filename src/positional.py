@@ -181,12 +181,12 @@ class PositionEncodingPalindromeExact(torch.nn.Module):
         for i in range(n):
             if i >= (n-1) / 2:
                 indicator_greater[i] = 1
-        pe = torch.stack([zero]*3 +
+        pe = torch.stack([zero]*4 +
                         [indicator_left] + 
                         [indicator_right] +
                         [indicator_less] + 
                         [indicator_greater] + 
-                         [zero]*3,
+                         [zero]*4,
                          dim=1)
         return pe
 

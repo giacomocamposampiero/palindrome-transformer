@@ -423,11 +423,11 @@ class PalindromeExactTransformerFirstLayer(torch.nn.TransformerEncoderLayer):
             eps: the epsilone value for layer normalization in both layers
 
         """
-        EMBED_DIM = 10
-        W_F1 = [[-1,0,-1,0,0,1,0,0,0,0],  
-            [-1,0,-1,0,0,0,1,0,0,0]]
+        EMBED_DIM = 12
+        W_F1 = [[-1,0,-1,-1,0,0,1,0,0,0,0,0],  
+                [-1,0,-1,-1,0,0,0,1,0,0,0,0]]
         b_F1 = [0,0]
-        W_F2 = [[0, 0]]*7 + [[1, 0],[0, 1],[0, 0]]
+        W_F2 = [[0, 0]]*8 + [[1, 0],[0, 1],[0, 0], [0, 0]]
         b_F2 = [0] * EMBED_DIM
 
         super().__init__(d_model=EMBED_DIM, nhead=2, dim_feedforward=3, dropout=0.)
@@ -481,11 +481,11 @@ class PalindromeExactTransformerSecondLayer(torch.nn.TransformerEncoderLayer):
             eps: the epsilone value for layer normalization in both layers
 
         """
-        EMBED_DIM = 10
-        W_Q =[[0,0,1,0,0,0,0,0,0,0]] + [[0]*10]*4 + [[0,0,1,0,0,0,0,0,0,0]] + [[0]*10]*4 
-        W_K =[[0,0,0,1,0,0,0,0,0,0]] + [[0]*10]*4 +[[0,0,0,0,1,0,0,0,0,0]] + [[0]*10]*4
-        W_V =[[0,0,0,0,0,0,0,1,0,0]] + [[0]*10]*4 +[[0,0,0,0,0,0,0,0,1,0]] + [[0]*10]*4
-        W_O = [[0]*10]*8 + [[0,0,0,0,0,0,0,0,0,0], [1,0,0,0,0,-1,0,0,0,0]]
+        EMBED_DIM = 12
+        W_Q =[[0,0,1,0,0,0,0,0,0,0,0,0]] + [[0]*EMBED_DIM]*5 + [[0,0,1,0,0,0,0,0,0,0,0,0]] + [[0]*EMBED_DIM]*5 
+        W_K =[[0,0,0,0,1,0,0,0,0,0,0,0]] + [[0]*EMBED_DIM]*5 + [[0,0,0,0,0,1,0,0,0,0,0,0]] + [[0]*EMBED_DIM]*5
+        W_V =[[0,0,0,0,0,0,0,0,1,0,0,0]] + [[0]*EMBED_DIM]*5 + [[0,0,0,0,0,0,0,0,0,1,0,0]] + [[0]*EMBED_DIM]*5
+        W_O = [[0]*EMBED_DIM]*9 + [[0,0,0,0,0,0,0,0,0,0,0,0],  [1,0,0,0,0,0,-1,0,0,0,0,0]] + [[0]*EMBED_DIM]
 
         super().__init__(d_model=EMBED_DIM, nhead=2, dim_feedforward=3, dropout=0.0)
 

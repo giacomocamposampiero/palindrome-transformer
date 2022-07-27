@@ -296,11 +296,11 @@ class PalindromeExactTransformer(Transformer):
         """
         super().__init__(alphabet_size, d_model)
         self.error = error
-        self.exact_word_embedding = torch.eye(3, d_model)
+        self.exact_word_embedding = torch.eye(4, d_model)
         self.pos_encoding = PositionEncodingPalindromeExact()
         self.encoder = PalindromeExactEncoder(normalize, eps)
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
-            [[0,0,0,0,0,0,0,0,0,1]], dtype=torch.float))
+            [[0,0,0,0,0,0,0,0,0,0,1,0]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
 
     def forward(self, w):

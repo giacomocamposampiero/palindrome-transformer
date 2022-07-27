@@ -94,7 +94,7 @@ def get_row(max_len):
             index = random.randrange(len(sequence))
             sequence[index] = (sequence[index] + 1) % 2
             label = False
-        sequence.append('$')
+        sequence.append('&')
     elif args.data_type == 'dyck1':
         half_len = seq_len // 2
         sequence = cfg_generate(half_len, [('(', ')')])
