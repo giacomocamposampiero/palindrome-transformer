@@ -116,7 +116,7 @@ class Trainer:
                 self.optim.step()
 
             # save statistics about training step
-            train_l.append(train_loss) # loss
+            train_l.append(train_loss/self.trainset.size) # loss
             train_acc.append(train_correct/self.trainset.size) # accuracy
                 
             # validation step
@@ -137,12 +137,12 @@ class Trainer:
                     test_loss += loss.item()
 
             # save statistic about validation step
-            val_l.append(test_loss) # loss
+            val_l.append(test_loss/self.testset.size) # loss
             val_acc.append(test_correct/self.testset.size) # accuracy
 
             # print step info
             if self.verbose:
-                print(f"[Epoch {epoch+1}] Train acc: {train_correct/self.trainset.size} Train loss: {train_loss}, Test acc: {test_correct/self.testset.size} Test loss: {test_loss}", flush=True)
+                print(f"[Epoch {epoch+1}] Train acc: {train_correct/self.trainset.size} Train loss: {train_loss/self.trainset.size}, Test acc: {test_correct/self.testset.size} Test loss: {test_loss/self.testset.size}", flush=True)
 
         return train_l, val_l, train_acc, val_acc
   

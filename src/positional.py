@@ -130,6 +130,7 @@ class PositionEncodingParityExact(torch.nn.Module):
         return pe
 
 class PositionEncodingOneExact(torch.nn.Module):
+
     def __init__(self):
         """
         Initialize positional embedder.
@@ -188,7 +189,7 @@ class PositionEncodingPalindromeExact(torch.nn.Module):
                          dim=1)
         return pe
 
-class StandardPositionalEncoder(torch.nn.Module):
+class StandardPositionalEncoding(torch.nn.Module):
     """
     Original sinuosidal postional encodings from (Vaswani et al. 2017).
     """
@@ -218,9 +219,10 @@ class StandardPositionalEncoder(torch.nn.Module):
         Args:
             n: length of the sequence (required).
         """
-        return self.pe[:,:n]
+        return self.pe[:,:n].squeeze(0)
 
 # # DEBUG PE 
-# pos = StandardPositionalEncoder(5, 20)
-# print(pos.forward(4))
->>>>>>> main
+# pos = StandardPositionalEncoding(5, 20)
+# print(pos.forward(4).shape)
+# pos = PositionEncodingOne(5)
+# print(pos.forward(4).shape)
