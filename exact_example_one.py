@@ -57,7 +57,7 @@ for epoch in range(epochs):
     for x, y in zip(X_train, y_train):
 
 
-        output = transformer(x)
+        output, sigmoid = transformer(x)
 
         if y == output:
             correct += 1
@@ -65,9 +65,7 @@ for epoch in range(epochs):
             incorrect += 1
 
         cnt += 1
-
-
-
+        print(output, sigmoid)
 
         print("Correct : ", correct)
         print("Incorrect : ", incorrect)
