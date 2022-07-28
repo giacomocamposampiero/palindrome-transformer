@@ -129,85 +129,81 @@ class PositionEncodingParityExact(torch.nn.Module):
                          dim=1)
         return pe
 
-
 class PositionEncodingOneExact(torch.nn.Module):
-    """
-    Custom positional encoder layer for One learning and exact
-    In this case, the positional embedding function is defined as 
-    \begin{equation*}
-        pe_{ij} =  \frac{i}{n}
-    \end{equation*}
-    where i is the position of the word and n the size of the sequence.
-    """
 
-    def __init__(self, size):
+    def __init__(self):
         """
         Initialize positional embedder.
-
-        Args:
-            size: max length of a sequence that can be encoded by the transformer (required).
         """
         super().__init__()
-        self.size = size
 
     def forward(self, n):
         """
         Compute positional embeddings for a sequence of lenght n.
-
         Args:
             n: length of the sequence (required).
         """
-
         zero = torch.zeros(n)
         pos = torch.arange(0, n).to(torch.float)
-        pos = pos / n
-        pe = torch.stack([pos] + [zero]*(self.size-1), dim=1)
+        pe = torch.stack([zero]*3 +
+                         [pos / n] + 
+                         [zero]*3,
+                         dim=1)
         return pe
 
 class PositionEncodingPalindromeExact(torch.nn.Module):
-    """
-    Custom positional encoder layer for Palindrome learning 
-    """
-
-    def __init__(self, size):
+    def __init__(self):
         """
         Initialize positional embedder.
-
-        Args:
-            size: max length of a sequence that can be encoded by the transformer (required).
         """
         super().__init__()
-        self.size = size
 
     def forward(self, n):
         """
         Compute positional embeddings for a sequence of lenght n.
-
         Args:
             n: length of the sequence (required).
         """
         zero = torch.zeros(n)
-        i1 = torch.arange(0, n).to(torch.float)
-        i2 = torch.arange(n-1, -1, step=-1).to(torch.float) 
-        pe = torch.stack([zero]*3 + [i1] + [i2] + [i1 <= (n+1)/2] + [i1 >= (n+1)/2] + [zero]*(self.size-7), dim=1)
+        indicator_left = torch.zeros(n) # i
+        indicator_right = torch.zeros(n) # n - i - 1
+        indicator_less = torch.zeros(n) # I[i <= (n - 1) / 2]
+        indicator_greater = torch.zeros(n) # I[i >= (n - 1) / 2]
+
+        for i in range(n):
+            indicator_left[i] = i 
+        for i in range(n):
+            indicator_right[i] = n - i - 1
+        for i in range(n):
+            if i <= (n-1) / 2:
+                indicator_less[i] = 1
+        for i in range(n):
+            if i >= (n-1) / 2:
+                indicator_greater[i] = 1
+        pe = torch.stack([zero]*4 +
+                        [indicator_left] + 
+                        [indicator_right] +
+                        [indicator_less] + 
+                        [indicator_greater] + 
+                         [zero]*4,
+                         dim=1)
         return pe
 
 class StandardPositionalEncoding(torch.nn.Module):
     """
     Original sinuosidal postional encodings from (Vaswani et al. 2017).
     """
-    
+
     def __init__(self, size, max_len=10000):
         """
         Initialize positional embedder.
-
         Args:
             size: size of the positional encodings.
             max_len: max length of the input sentence that can be encoded using these positional encodings
         """
         super().__init__()
         self.size = size
-        
+
         pe = torch.zeros(max_len, size)
 
         for pos in range(max_len):
@@ -215,12 +211,11 @@ class StandardPositionalEncoding(torch.nn.Module):
                 pe[pos, i] = math.sin(pos / (10000 ** ((2 * i)/size)))
                 if i+1 < size: pe[pos, i + 1] = math.cos(pos / (10000 ** ((2 * (i + 1))/size)))
 
-        self.pe = pe.unsqueeze(0) 
-    
+        self.pe = pe.unsqueeze(0)
+
     def forward(self, n):
         """
         Compute positional embeddings for a sequence of lenght n.
-
         Args:
             n: length of the sequence (required).
         """

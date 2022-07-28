@@ -9,6 +9,6 @@
 - [x] Theory ONE
 - [x] Theory Palyndrome
 - [ ] ONE Learned
-- [ ] ONE Exact
-- [ ] Palyndrome Learned
-- [ ] Palyndrome Exact
+- [x] ONE Exact
+- [ ] Palindrome Learned
+- [x] Palindrome Exact
