@@ -122,7 +122,7 @@ class FirstExactTransformer(Transformer):
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,1]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
-        self.sigmoid = torch.nn.Sigmoid()
+        self.logsigmoid = torch.nn.LogSigmoid()
 
     def forward(self, w):
         """
@@ -138,7 +138,7 @@ class FirstExactTransformer(Transformer):
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
         output = self.activation(z)
-        return output, float(self.sigmoid(z)[0])
+        return output, float(self.logsigmoid(z)[0])
 
     def activation(self, z):
         z = z[0]
@@ -167,7 +167,7 @@ class ParityExactTransformer(Transformer):
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,0,0,0,1,0]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
-        self.sigmoid = torch.nn.Sigmoid()
+        self.logsigmoid = torch.nn.LogSigmoid()
 
     def forward(self, w):
         """
@@ -182,7 +182,7 @@ class ParityExactTransformer(Transformer):
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
         output = self.activation(z)
-        return output, float(self.sigmoid(z)[0])
+        return output, float(self.logsigmoid(z)[0])
 
     def activation(self, z):
         z = z[0]
@@ -215,7 +215,7 @@ class OneExactTransformer(Transformer):
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,0,1]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
-        self.sigmoid = torch.nn.Sigmoid()
+        self.logsigmoid = torch.nn.LogSigmoid()
 
     def forward(self, w):
         """
@@ -230,7 +230,7 @@ class OneExactTransformer(Transformer):
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
         output = self.activation(z)
-        return output, float(self.sigmoid(z)[0])
+        return output, float(self.logsigmoid(z)[0])
 
     def activation(self, z):
         z = z[0]
@@ -262,7 +262,6 @@ class PalindromeExactTransformer(Transformer):
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,0,0,0,0,0,1,0]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
-        self.sigmoid = torch.nn.Sigmoid()
 
     def forward(self, w):
         """
@@ -277,7 +276,7 @@ class PalindromeExactTransformer(Transformer):
         y = self.encoder(x.unsqueeze(1)).squeeze(1)
         z = self.output_layer(y[0])
         output = self.activation(z)
-        return output, float(self.sigmoid(z)[0])
+        return output, 0
 
     def activation(self, z):
         z = z[0]

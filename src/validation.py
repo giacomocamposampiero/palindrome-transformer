@@ -48,7 +48,7 @@ class Validator:
         self.log_sigmoid = torch.nn.LogSigmoid()
         
 
-    def validate(self) -> tuple[float, float]:
+    def validate(self):
         """
         Validate the model using the provided validation set.
 
@@ -72,20 +72,20 @@ class Validator:
 
                 # forward step
                 x = self.__encode(x)
-                output = self.model(x)
+                output, logsigmoid = self.model(x)
 
-                if not y: output = -output
-                if output > 0: correct += 1
+                if output == y:
+                    correct += 1
 
                 # compute loss
-                model_los = -self.log_sigmoid(output)
-                loss += model_los.item()
+                model_los = -logsigmoid
+                loss += model_los
 
         # print validation info
         if self.verbose:
-            print(f"[Validation] Length {self.valset.length}. Loss: {loss}, Accuracy: {correct/self.valset.size}", flush=True)
+            print(f"[Validation] Length {self.valset.length}. Loss: {loss/self.valset.size}, Accuracy: {correct/self.valset.size}", flush=True)
 
-        return loss, correct / self.valset.size
+        return loss / self.valset.size, correct / self.valset.size
 
     def __encode(self, s: str) -> torch.Tensor:
         alphabet_index = {a:i for i,a in enumerate(self.vocab)}

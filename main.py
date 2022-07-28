@@ -84,6 +84,16 @@ def log_results(runid, args, train_l, val_l, train_acc, val_acc):
             writer = csv.writer(file)
             writer.writerow([runid, i+1] + list(row))
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
@@ -92,15 +102,15 @@ if __name__ == "__main__":
     ap.add_argument('--train_length', dest="train_length", type=int, default=10)
     ap.add_argument('--test_length', dest="test_length", type=int, default=1000)
     ap.add_argument('--size', type=int, default=100)
-    ap.add_argument('--varlen', type=bool, default=False)
+    ap.add_argument('--varlen', type=str2bool, default=False)
     ap.add_argument('--runs', type=int, default=1)
     ap.add_argument('--epochs', type=int, default=10)
     # model related
-    ap.add_argument('--exact', dest='exact', type=bool, default=False, help='Use the exact solution or not.')
+    ap.add_argument('--exact', dest='exact', type=str2bool, default=False, help='Use the exact solution or not.')
     ap.add_argument('--layers', dest='layers', type=int, default=2)
     ap.add_argument('--heads', dest='heads', type=int, default=1)
     ap.add_argument('--d_ffnn', type=int, default=64)
-    ap.add_argument('--scaled', type=bool, default=False, help='Log-length scaled attention')
+    ap.add_argument('--scaled', type=str2bool, default=False, help='Log-length scaled attention')
     ap.add_argument('--eps', type=float, default=1e-5, help='Layer normalization value')
     ap.add_argument('--lr', type=float, default=0.0003, help='Training learning rate')
 
