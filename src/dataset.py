@@ -216,7 +216,7 @@ class Dataset:
                 index = random.randrange(len(sequence))
                 sequence[index] = (sequence[index] + 1) % 2
                 label = False
-            sequence = sequence + ['$']
+            sequence = sequence + ['&']
         elif self.data_type == 'dyck1':
             half_len = seq_len // 2
             sequence = self.__generate_bracket_sequence(half_len, [('(', ')')])
