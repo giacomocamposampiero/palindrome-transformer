@@ -211,9 +211,6 @@ class Dataset:
         elif self.data_type == 'palindrome':
             half_len = seq_len // 2
             prefix = [random.randrange(2) for _ in range(half_len)]
-            extra = []
-            if seq_len % 2 == 1:
-                extra = [random.randrange(2)]
             sequence = prefix + [i for i in reversed(prefix)]
             label = True
             if(random.randrange(2) == 1) and len(sequence) != 0:
@@ -222,7 +219,7 @@ class Dataset:
                 label = False
             if seq_len % 2 == 1:
                 left_half, right_half = sequence[:half_len], sequence[half_len:]
-                sequence = left_half + extra + right_half
+                sequence = left_half + [random.randrange(2)] + right_half
             sequence = sequence + ['&']
         elif self.data_type == 'dyck1':
             half_len = seq_len // 2
