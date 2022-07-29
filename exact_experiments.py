@@ -16,20 +16,19 @@ def main(args):
     if args.lan == 'first':
         vocab = ["0", "1", "$"]
         d_model = 6
-        transformer = FirstExactTransformer(len(vocab), d_model, args.normalize, args.eps)
+        transformer = FirstExactTransformer(len(vocab), d_model)
     elif args.lan == 'parity':
         vocab = ["0", "1", "$"]
         d_model = 10
-        transformer = ParityExactTransformer(len(vocab), d_model, args.normalize, args.eps)
+        transformer = ParityExactTransformer(len(vocab), d_model)
     elif args.lan == 'one':
         vocab = ["0", "1", "$"]
         d_model = 7
-        print(args.normalize)
-        transformer = OneExactTransformer(len(vocab), d_model, args.normalize, args.eps)
+        transformer = OneExactTransformer(len(vocab), d_model)
     elif args.lan == 'palindrome':
         vocab = ["0", "1", "$", "&"]
         d_model = 12
-        transformer = PalindromeExactTransformer(len(vocab), d_model, args.normalize, args.eps, args.palindrome_error)
+        transformer = PalindromeExactTransformer(len(vocab), d_model, args.palindrome_error)
     else:
         raise ValueError(f"{args.lan} language not supported")
 
@@ -64,11 +63,11 @@ def log_model(runid, args):
     if not path.exists():
         with open(path, 'w') as file:
             writer = csv.writer(file)
-            writer.writerow(['runid', 'lan', 'test_length', 'size', 'normalize', 'eps', 'palindrome_error'])
+            writer.writerow(['runid', 'lan', 'test_length', 'size', 'palindrome_error'])
 
     with open(path, 'a') as file:
             writer = csv.writer(file)
-            writer.writerow([runid, args.lan, args.test_length, args.size, args.normalize, args.eps, args.palindrome_error])
+            writer.writerow([runid, args.lan, args.test_length, args.size, args.palindrome_error])
 
 def log_results(runid, args, val_l, val_acc):
 
@@ -93,8 +92,6 @@ if __name__ == "__main__":
     ap.add_argument('--size', type=int, default=100)
 
     # model related
-    ap.add_argument('--normalize', type=str2bool, default=False, help='Using normalization on layers')
-    ap.add_argument('--eps', type=float, default=1e-5, help='Layer normalization value')
     ap.add_argument('--palindrome_error', type=float, default=1e-7, help='Error margin for palindrome classification')
 
     args = ap.parse_args()
