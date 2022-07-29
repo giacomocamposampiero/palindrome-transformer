@@ -1,5 +1,5 @@
 import argparse
-from src.transformer import FirstTransformer, FirstExactTransformer, ParityExactTransformer, ParityTransformer
+from src.transformer import StandardTransformer
 from src.trainer import Trainer
 from src.dataset import Dataset
 from src.utils import str2bool
@@ -15,24 +15,12 @@ def main(args):
     for run in range(args.runs):
 
         seed = rnd_seeds[run]
+        d_model = 16
+        positional = "first" if args.lan == 'one' else args.lan
+        cls_pos = -1 if args.lan == 'parity' else 0
+        vocab = ["0", "1", "$", "&"] if args.lan == 'palindrome' else ["0", "1", "$"]
 
-        # define number of layers
-        if args.exact: d_model = 6
-        else: d_model = 16
-
-        # language switch
-        if args.lan == 'first':
-            vocab = ["0", "1", "$"]
-            transformer = FirstExactTransformer(len(vocab), d_model) if args.exact \
-                    else FirstTransformer(len(vocab), args.layers, args.heads, d_model, args.d_ffnn, args.scaled, args.eps)
-            
-        elif args.lan == 'parity':
-            vocab = ["0", "1", "$"]
-            transformer = ParityExactTransformer(len(vocab), d_model) if args.exact \
-                    else ParityTransformer(len(vocab), args.layers, args.heads, d_model, args.d_ffnn, args.scaled, args.eps)
-
-        # TODO other languages
-        else: raise ValueError(f"{args.lan} language not supported.")
+        transformer = StandardTransformer(len(vocab), args.layers, args.heads, d_model, args.d_ffnn, args.scaled, args.eps, positional=positional, cls_pos=cls_pos)
         
         optim = torch.optim.Adam(transformer.parameters(), lr=args.lr)
 
@@ -47,6 +35,7 @@ def main(args):
         print(f"[RUNID {runid}] Running models.")
         file1 = open("run.id", "w")
         file1.write(str(runid))
+        
         # log model details
         log_model(runid, args)
 
@@ -98,7 +87,6 @@ if __name__ == "__main__":
     ap.add_argument('--runs', type=int, default=1)
     ap.add_argument('--epochs', type=int, default=10)
     # model related
-    ap.add_argument('--exact', dest='exact', type=str2bool, default=False, help='Use the exact solution or not.')
     ap.add_argument('--layers', dest='layers', type=int, default=2)
     ap.add_argument('--heads', dest='heads', type=int, default=1)
     ap.add_argument('--d_ffnn', type=int, default=64)
