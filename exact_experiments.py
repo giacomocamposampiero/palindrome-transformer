@@ -3,6 +3,7 @@ import argparse
 from src.transformer import FirstExactTransformer, OneExactTransformer, ParityExactTransformer, PalindromeExactTransformer
 from src.dataset import Dataset
 from src.validation import Validator
+from src.utils import str2bool
 
 import torch
 import os
@@ -81,16 +82,6 @@ def log_results(runid, args, val_l, val_acc):
     with open(path, 'a') as file:
         writer = csv.writer(file)
         writer.writerow([runid, val_l, val_acc])
-
-def str2bool(v):
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 if __name__ == "__main__":
 

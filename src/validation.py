@@ -78,8 +78,8 @@ class Validator:
                     correct += 1
 
                 # compute loss
-                model_los = -logsigmoid
-                loss += model_los
+                model_loss = -logsigmoid
+                loss += model_loss
 
         # print validation info
         if self.verbose:
