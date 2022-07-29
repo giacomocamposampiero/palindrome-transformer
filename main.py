@@ -2,9 +2,11 @@ import argparse
 from src.transformer import FirstTransformer, FirstExactTransformer, ParityExactTransformer, ParityTransformer
 from src.trainer import Trainer
 from src.dataset import Dataset
+from src.utils import str2bool
 import torch
 import os
 import csv
+
 
 def main(args):
 
@@ -92,15 +94,15 @@ if __name__ == "__main__":
     ap.add_argument('--train_length', dest="train_length", type=int, default=10)
     ap.add_argument('--test_length', dest="test_length", type=int, default=1000)
     ap.add_argument('--size', type=int, default=100)
-    ap.add_argument('--varlen', type=bool, default=False)
+    ap.add_argument('--varlen', type=str2bool, default=False)
     ap.add_argument('--runs', type=int, default=1)
     ap.add_argument('--epochs', type=int, default=10)
     # model related
-    ap.add_argument('--exact', dest='exact', type=bool, default=False, help='Use the exact solution or not.')
+    ap.add_argument('--exact', dest='exact', type=str2bool, default=False, help='Use the exact solution or not.')
     ap.add_argument('--layers', dest='layers', type=int, default=2)
     ap.add_argument('--heads', dest='heads', type=int, default=1)
     ap.add_argument('--d_ffnn', type=int, default=64)
-    ap.add_argument('--scaled', type=bool, default=False, help='Log-length scaled attention')
+    ap.add_argument('--scaled', type=str2bool, default=False, help='Log-length scaled attention')
     ap.add_argument('--eps', type=float, default=1e-5, help='Layer normalization value')
     ap.add_argument('--lr', type=float, default=0.0003, help='Training learning rate')
 
