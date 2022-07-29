@@ -209,13 +209,20 @@ class Dataset:
             if number_of_ones != 1:
                 label = False
         elif self.data_type == 'palindrome':
-            prefix = [random.randrange(2) for _ in range(seq_len // 2)]
+            half_len = seq_len // 2
+            prefix = [random.randrange(2) for _ in range(half_len)]
+            extra = []
+            if seq_len % 2 == 1:
+                extra = [random.randrange(2)]
             sequence = prefix + [i for i in reversed(prefix)]
             label = True
-            if(random.randrange(2) == 1):
+            if(random.randrange(2) == 1) and len(sequence) != 0:
                 index = random.randrange(len(sequence))
                 sequence[index] = (sequence[index] + 1) % 2
                 label = False
+            if seq_len % 2 == 1:
+                left_half, right_half = sequence[:half_len], sequence[half_len:]
+                sequence = left_half + extra + right_half
             sequence = sequence + ['&']
         elif self.data_type == 'dyck1':
             half_len = seq_len // 2
