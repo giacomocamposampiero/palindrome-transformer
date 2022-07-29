@@ -55,11 +55,11 @@ def log_model(runid, args):
     if not path.exists():
         with open(path, 'w') as file:
             writer = csv.writer(file)
-            writer.writerow(['runid', 'lan', 'train_length', 'test_length', 'size', 'varlen','epochs','exact','layers','heads','d_ffnn','scaled','eps','lr'])
+            writer.writerow(['runid', 'lan', 'train_length', 'test_length', 'size', 'varlen','epochs','layers','heads','d_ffnn','scaled','eps','lr'])
 
     with open(path, 'a') as file:
             writer = csv.writer(file)
-            writer.writerow([runid, args.lan, args.train_length, args.test_length, args.size, args.varlen, args.epochs, args.exact, args.layers, args.heads, args.d_ffnn, args.scaled, args.eps, args.lr])
+            writer.writerow([runid, args.lan, args.train_length, args.test_length, args.size, args.varlen, args.epochs, args.layers, args.heads, args.d_ffnn, args.scaled, args.eps, args.lr])
 
 def log_results(runid, args, train_l, val_l, train_acc, val_acc):
 
