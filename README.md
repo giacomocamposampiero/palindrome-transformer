@@ -8,7 +8,7 @@ This README provides an overview of the code developed for our project on limita
 
 The dependencies needed to run our code are listed in ``requirements.txt``.
 
-## Exact Experiments
+## Learned Experiments
 To recreate our results for learned implementations run ``learned_experiments.sh``
 
 ## Exact Experiments
