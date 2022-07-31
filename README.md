@@ -15,7 +15,6 @@ To recreate our results for exact implementations run ``exact_experiments.sh``
 Running ``floating_point_error.py`` will show a similar floating point error that will affect the results of Palindrome (for perfect precision, the result should be 0).
 
 ## Feature list
-- [x] Encoder
 - [x] First Learned
 - [x] First Exact 
 - [x] Parity Learned
