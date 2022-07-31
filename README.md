@@ -12,9 +12,7 @@ Program that should output 0, but showcases floating point error we get for Pali
 - [x] First Exact 
 - [x] Parity Learned
 - [X] Parity Exact
-- [x] Theory ONE
-- [x] Theory Palyndrome
-- [ ] ONE Learned
+- [x] ONE Learned
 - [x] ONE Exact
-- [ ] Palindrome Learned
+- [x] Palindrome Learned
 - [x] Palindrome Exact
