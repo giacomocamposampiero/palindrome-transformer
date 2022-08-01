@@ -69,9 +69,9 @@ class StandardTransformer(Transformer):
         elif positional == 'parity':
             self.pos_encoding = PositionEncodingParity(d_model)
         elif positional == 'one':
-            self.pos_encoding = PositionEncodingOneExact(d_model)
+            self.pos_encoding = PositionEncodingFirst(d_model)
         elif positional == 'palindrome':
-            self.pos_encoding = PositionEncodingPalindromeExact(d_model)
+            self.pos_encoding = PositionEncodingPalindromeExact()
         
         self.cls_pos = cls_pos
 
