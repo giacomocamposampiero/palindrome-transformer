@@ -11,7 +11,10 @@ In response to the limitations postulated by [Hahn (2020)](https://direct.mit.ed
 In this work, we have verified their results experimentally, finding that the exact solutions do indeed work as described, but that PARITY cannot be learned. 
 We then extended their results by deriving custom transformer weights that, at least in in theory, can recognize instances of the regular language ONE and the context free language PALINDROME for arbitrary input sizes n. 
 
-In practice, however, the solution for PALINDROME does not generalise to longer sequences due to floating point precision errors. 
+In practice, however, the solution for PALINDROME does not generalise to longer sequences due to floating point precision errors.
+
+This work was developed as course project for the course [Advanced Formal Language Theory, Spring 2022](https://rycolab.io/classes/aflt-s22/
+) at ETH Zürich.
 
 This README provides an overview of the code developed for our project on limitations of soft attention.
 
