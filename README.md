@@ -1,6 +1,7 @@
 # Overcoming Theoretical Limitations of Soft Attention
 
 Authors: Giacomo Camposampiero, Bernhard Hilmarsson, Franz Nowak, and Clemente Pasti
+
 Date: 31st July 2022
 
 ## Introduction
@@ -43,6 +44,7 @@ python experiments/learn/plot.py
 Results of experiments are stored in the ``data`` directory. 
 - ``data/models.csv`` contains information on the run and the model.
 - ``data/results.csv`` contain training information (validation and training loss/accuracy) for each epoch of different runs
+
 Every traning (or testing in exact implementations) run is logged with a unique run identification number. The results and models tables can be joined on the attribute ``runid``. 
 
 ## Example of floating point precision error
