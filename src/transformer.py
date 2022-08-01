@@ -105,7 +105,7 @@ class FirstExactTransformer(Transformer):
     Transformer Encoder (without decoding step) to learn First language exactly.
     """
 
-    def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5):
+    def __init__(self, alphabet_size, d_model):
         """
         Initialize Transformer module.
 
@@ -118,7 +118,7 @@ class FirstExactTransformer(Transformer):
         super().__init__(alphabet_size, d_model)
         self.exact_word_embedding = torch.eye(3, d_model)
         self.pos_encoding = PositionEncodingFirstExact()
-        self.encoder = FirstExactEncoder(normalize=normalize, eps=eps)
+        self.encoder = FirstExactEncoder()
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,1]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
@@ -150,7 +150,7 @@ class FirstExactTransformer(Transformer):
             return False
 
 class ParityExactTransformer(Transformer):
-    def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5):
+    def __init__(self, alphabet_size, d_model):
         """
         Initialize Transformer module.
 
@@ -163,7 +163,7 @@ class ParityExactTransformer(Transformer):
         super().__init__(alphabet_size, d_model)
         self.exact_word_embedding = torch.eye(3, d_model)
         self.pos_encoding = PositionEncodingParityExact()
-        self.encoder = ParityExactEncoder(normalize=normalize, eps=eps)
+        self.encoder = ParityExactEncoder()
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,0,0,0,1,0]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
@@ -199,7 +199,7 @@ class OneExactTransformer(Transformer):
     """
     Transformer Encoder (without decoding step) to learn One language exactly
     """
-    def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5):
+    def __init__(self, alphabet_size, d_model):
         """
         Initialize Transformer module.
         Args:
@@ -211,7 +211,7 @@ class OneExactTransformer(Transformer):
         super().__init__(alphabet_size, d_model)
         self.exact_word_embedding = torch.eye(3, d_model)
         self.pos_encoding = PositionEncodingOneExact()
-        self.encoder = OneExactEncoder(normalize, eps)
+        self.encoder = OneExactEncoder()
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,0,1]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
@@ -245,7 +245,7 @@ class PalindromeExactTransformer(Transformer):
     """
     Transformer Encoder (without decoding step) to learn Palindrome language exactly (theoretically)
     """
-    def __init__(self, alphabet_size, d_model, normalize=False, eps=1e-5, error=1e-7):
+    def __init__(self, alphabet_size, d_model, error=1e-7):
         """
         Initialize Transformer module.
         Args:
@@ -258,7 +258,7 @@ class PalindromeExactTransformer(Transformer):
         self.error = error
         self.exact_word_embedding = torch.eye(4, d_model)
         self.pos_encoding = PositionEncodingPalindromeExact()
-        self.encoder = PalindromeExactEncoder(normalize, eps)
+        self.encoder = PalindromeExactEncoder()
         self.output_layer.weight = torch.nn.Parameter(torch.tensor(
             [[0,0,0,0,0,0,0,0,0,0,1,0]], dtype=torch.float))
         self.output_layer.bias = torch.nn.Parameter(torch.tensor([0.]))
