@@ -6,14 +6,14 @@ def main(args):
 
     language = args.lan
 
-    mod1 = "data/" + language + "1_models.csv"
-    res1 = "data/" + language + "1_results.csv"
-    mod2 = "data/" + language + "2_models.csv"
-    res2 = "data/" + language + "2_results.csv"
-    mod1sc = "data/" + language + "sc1_models.csv"
-    res1sc = "data/" + language + "sc1_results.csv"
-    mod2sc = "data/" + language + "sc2_models.csv"
-    res2sc = "data/" + language + "sc2_results.csv"
+    mod1 = "experiments/generalize/data/" + language + "1_models.csv"
+    res1 = "experiments/generalize/data/" + language + "1_results.csv"
+    mod2 = "experiments/generalize/data/" + language + "2_models.csv"
+    res2 = "experiments/generalize/data/" + language + "2_results.csv"
+    mod1sc = "experiments/generalize/data/" + language + "sc1_models.csv"
+    res1sc = "experiments/generalize/data/" + language + "sc1_results.csv"
+    mod2sc = "experiments/generalize/data/" + language + "sc2_models.csv"
+    res2sc = "experiments/generalize/data/" + language + "sc2_results.csv"
 
     models1 = pd.read_csv(mod1)
     results1 = pd.read_csv(res1)
@@ -68,14 +68,10 @@ def main(args):
     axs[0, 0].set_ylabel("Validation loss (bit cross-entropy)",fontsize=16, labelpad=10)
     axs[1, 0 ].set_ylabel("Validation accuracy",fontsize=16, labelpad=10)
     axs[0, 0 ].set_ylim(top=1.1, bottom=-0.1)
-    axs[0, 0 ].set_ylabel("Validation loss (bit cross-entropy)",fontsize=16, labelpad=10)
-    axs[1, 0].set_ylabel("Validation accuracy",fontsize=16, labelpad=10)
-    axs[0, 0].set_xscale("log")
-    axs[1, 0].set_xscale("log")
+    axs[1, 0 ].set_ylim(top=1.1, bottom=-0.1)
+    axs[0, 1].set_ylim(bottom=-0.1, top=1.1)
+
     axs[1, 0].set_xlabel("Epochs",fontsize=16, labelpad=10)
-
-
-    axs[1, 0 ].set_xlabel("Epochs",fontsize=16, labelpad=10)
     axs[1, 1].set_xlabel("Epochs",fontsize=16, labelpad=10)
 
     axs[0, 0].set_xscale("log")
@@ -86,8 +82,7 @@ def main(args):
     axs[1, 1].set_xscale("log")
     axs[1, 1].legend(loc='upper center', bbox_to_anchor=(-0.13, -0.2), fancybox=True, shadow=True, ncol=6)
     
-    plt.savefig(language+"_generalize.pdf", transparent=True)
-
+    plt.savefig("experiments/generalize/" + language+"_generalize.pdf", transparent=True)
 
 
 if __name__ == "__main__":
